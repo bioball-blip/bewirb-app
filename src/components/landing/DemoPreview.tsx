@@ -12,6 +12,7 @@ type DemoJobPosting = {
   id: string
   title: string
   employmentType: string
+  description: string
 }
 
 const statusLabels: Record<string, string> = {
@@ -73,8 +74,20 @@ const initialDemoApplications: DemoApplication[] = [
 ]
 
 const initialDemoJobPostings: DemoJobPosting[] = [
-  { id: 'j1', title: 'Rezeptionist:in', employmentType: 'vollzeit' },
-  { id: 'j2', title: 'Koch/Köchin', employmentType: 'teilzeit' },
+  {
+    id: 'j1',
+    title: 'Rezeptionist:in',
+    employmentType: 'vollzeit',
+    description:
+      'Empfang unserer Gäste, Check-in/Check-out und Telefondienst. Freundliches Auftreten und Deutsch- sowie Englischkenntnisse erwünscht.',
+  },
+  {
+    id: 'j2',
+    title: 'Koch/Köchin',
+    employmentType: 'teilzeit',
+    description:
+      'Zubereitung von Speisen à la carte, Mitgestaltung der Wochenkarte. Erfahrung in der gehobenen Gastronomie von Vorteil.',
+  },
 ]
 
 export function DemoPreview() {
@@ -85,6 +98,7 @@ export function DemoPreview() {
   const [jobPostings, setJobPostings] = useState(initialDemoJobPostings)
   const [newJobTitle, setNewJobTitle] = useState('')
   const [newJobType, setNewJobType] = useState('vollzeit')
+  const [newJobDescription, setNewJobDescription] = useState('')
 
   const previewApplication =
     applications.find((application) => application.id === previewId) ??
@@ -121,11 +135,17 @@ export function DemoPreview() {
     const title = newJobTitle.trim()
     if (!title) return
     setJobPostings((prev) => [
-      { id: String(Date.now()), title, employmentType: newJobType },
+      {
+        id: String(Date.now()),
+        title,
+        employmentType: newJobType,
+        description: newJobDescription.trim(),
+      },
       ...prev,
     ])
     setNewJobTitle('')
     setNewJobType('vollzeit')
+    setNewJobDescription('')
   }
 
   const tabClass = (active: boolean) =>
@@ -246,41 +266,54 @@ export function DemoPreview() {
             <h4 className="text-sm font-semibold text-gray-900">
               Stelle ausschreiben
             </h4>
-            <form
-              onSubmit={handleAddJob}
-              className="flex flex-col sm:flex-row gap-2 sm:items-end"
-            >
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-[11px] text-gray-500">
-                  Titel der Stelle
-                </label>
-                <input
-                  type="text"
-                  value={newJobTitle}
-                  onChange={(event) => setNewJobTitle(event.target.value)}
-                  placeholder="z. B. Servicekraft"
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-crewwerk focus:ring-2 focus:ring-crewwerk/15"
-                />
+            <form onSubmit={handleAddJob} className="flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col gap-1 flex-1">
+                  <label className="text-[11px] text-gray-500">
+                    Titel der Stelle
+                  </label>
+                  <input
+                    type="text"
+                    value={newJobTitle}
+                    onChange={(event) => setNewJobTitle(event.target.value)}
+                    placeholder="z. B. Servicekraft"
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-crewwerk focus:ring-2 focus:ring-crewwerk/15"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] text-gray-500">
+                    Beschäftigung
+                  </label>
+                  <select
+                    value={newJobType}
+                    onChange={(event) => setNewJobType(event.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-crewwerk"
+                  >
+                    {employmentTypeOptions.map((type) => (
+                      <option key={type} value={type}>
+                        {employmentTypeLabels[type]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] text-gray-500">
-                  Beschäftigung
+                  Beschreibung
                 </label>
-                <select
-                  value={newJobType}
-                  onChange={(event) => setNewJobType(event.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-crewwerk"
-                >
-                  {employmentTypeOptions.map((type) => (
-                    <option key={type} value={type}>
-                      {employmentTypeLabels[type]}
-                    </option>
-                  ))}
-                </select>
+                <textarea
+                  value={newJobDescription}
+                  onChange={(event) =>
+                    setNewJobDescription(event.target.value)
+                  }
+                  rows={3}
+                  placeholder="Aufgaben, Anforderungen, was den Betrieb ausmacht …"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-crewwerk focus:ring-2 focus:ring-crewwerk/15 resize-none"
+                />
               </div>
               <button
                 type="submit"
-                className="text-xs font-medium bg-crewwerk text-crewwerk-cream rounded-full px-3.5 py-2 hover:bg-crewwerk-light transition-colors"
+                className="self-start text-xs font-medium bg-crewwerk text-crewwerk-cream rounded-full px-3.5 py-2 hover:bg-crewwerk-light transition-colors"
               >
                 + Stelle anlegen
               </button>
@@ -303,6 +336,11 @@ export function DemoPreview() {
                   <span className="text-[11px] text-gray-500">
                     {employmentTypeLabels[job.employmentType]}
                   </span>
+                  {job.description && (
+                    <p className="text-[11px] text-gray-500 leading-relaxed">
+                      {job.description}
+                    </p>
+                  )}
                   <span className="text-[10px] text-gray-400 font-mono truncate">
                     crewwerk.de/apply/job/{job.id}
                   </span>
