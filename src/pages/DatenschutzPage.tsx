@@ -1,10 +1,16 @@
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { Logo } from '../components/Logo'
 
 export function DatenschutzPage() {
   useDocumentTitle('Datenschutz')
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-12">
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-crewwerk px-4 py-4">
+        <Logo size="sm" align="left" variant="light" linkTo="/dashboard" />
+      </div>
+
+      <div className="px-4 py-12">
       <div className="max-w-2xl mx-auto bg-white shadow rounded-lg p-8 flex flex-col gap-5 text-sm text-gray-700">
         <h1 className="text-2xl font-semibold text-gray-900">
           Datenschutzerklärung
@@ -120,6 +126,7 @@ export function DatenschutzPage() {
             Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde.
           </p>
         </section>
+      </div>
       </div>
     </div>
   )

@@ -1,8 +1,11 @@
+import { Link } from 'react-router-dom'
+
 type LogoProps = {
   withTagline?: boolean
   size?: 'sm' | 'lg'
   align?: 'center' | 'left'
   variant?: 'dark' | 'light'
+  linkTo?: string
 }
 
 export function Logo({
@@ -10,6 +13,7 @@ export function Logo({
   size = 'lg',
   align = 'center',
   variant = 'dark',
+  linkTo,
 }: LogoProps) {
   const iconHeight = size === 'lg' ? 28 : 20
   const iconWidth = (iconHeight * 40) / 24
@@ -18,7 +22,7 @@ export function Logo({
   const taglineColor =
     variant === 'light' ? 'text-crewwerk-cream/70' : 'text-gray-500'
 
-  return (
+  const content = (
     <div
       className={
         'flex flex-col gap-1 ' +
@@ -57,4 +61,14 @@ export function Logo({
       {withTagline && <p className={`text-xs ${taglineColor}`}>Gemeinsam mehr erreichen.</p>}
     </div>
   )
+
+  if (linkTo) {
+    return (
+      <Link to={linkTo} className="hover:opacity-80 transition-opacity">
+        {content}
+      </Link>
+    )
+  }
+
+  return content
 }

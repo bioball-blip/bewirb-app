@@ -163,7 +163,13 @@ export function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-crewwerk px-4 py-4 flex justify-between items-center">
-        <Logo size="sm" align="left" withTagline variant="light" />
+        <Logo
+          size="sm"
+          align="left"
+          withTagline
+          variant="light"
+          linkTo="/dashboard"
+        />
         <button
           onClick={handleLogout}
           className="text-sm text-crewwerk-cream underline"

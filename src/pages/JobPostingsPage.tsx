@@ -127,7 +127,7 @@ export function JobPostingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-crewwerk px-4 py-4 flex justify-between items-center">
-        <Logo size="sm" align="left" variant="light" />
+        <Logo size="sm" align="left" variant="light" linkTo="/dashboard" />
         <Link
           to="/dashboard"
           className="text-sm text-crewwerk-cream underline"
