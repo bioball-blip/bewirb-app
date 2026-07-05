@@ -218,7 +218,7 @@ export function DashboardPage() {
         </button>
       </div>
 
-      <div className="max-w-3xl mx-auto flex flex-col gap-6 px-4 py-8">
+      <div className="max-w-4xl mx-auto flex flex-col gap-6 px-4 py-8">
         <h1 className="text-2xl font-semibold text-crewwerk">Dashboard</h1>
 
         {tenantName && (
@@ -316,19 +316,18 @@ export function DashboardPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-100 text-gray-600">
               <tr>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">E-Mail</th>
-                <th className="px-4 py-2 font-medium">Stelle</th>
-                <th className="px-4 py-2 font-medium">Status</th>
-                <th className="px-4 py-2 font-medium">Eingegangen am</th>
-                <th className="px-4 py-2 font-medium"></th>
+                <th className="px-3 py-2 font-medium">Bewerber:in</th>
+                <th className="px-3 py-2 font-medium">Stelle</th>
+                <th className="px-3 py-2 font-medium">Status</th>
+                <th className="px-3 py-2 font-medium">Datum</th>
+                <th className="px-2 py-2 font-medium"></th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={5}
                     className="px-4 py-4 text-gray-400 text-center"
                   >
                     Lädt…
@@ -338,7 +337,7 @@ export function DashboardPage() {
               {!loading && applications.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={5}
                     className="px-4 py-4 text-gray-400 text-center"
                   >
                     Noch keine Bewerbungen.
@@ -347,16 +346,18 @@ export function DashboardPage() {
               )}
               {applications.map((application) => (
                 <tr key={application.id} className="border-t border-gray-100">
-                  <td className="px-4 py-2 text-gray-900">
-                    {application.applicant_name}
+                  <td className="px-3 py-2">
+                    <div className="text-gray-900">
+                      {application.applicant_name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {application.applicant_email}
+                    </div>
                   </td>
-                  <td className="px-4 py-2 text-gray-600">
-                    {application.applicant_email}
-                  </td>
-                  <td className="px-4 py-2 text-gray-600">
+                  <td className="px-3 py-2 text-gray-600">
                     {application.job_postings?.title ?? 'Initiativbewerbung'}
                   </td>
-                  <td className="px-4 py-2 text-gray-600">
+                  <td className="px-3 py-2 text-gray-600">
                     <select
                       value={application.status}
                       disabled={updatingId === application.id}
@@ -372,17 +373,30 @@ export function DashboardPage() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-2 text-gray-600">
+                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
                     {new Date(application.created_at).toLocaleDateString(
                       'de-DE',
                     )}
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-2 py-2 text-right">
                     <button
                       onClick={() => handleDelete(application)}
-                      className="text-xs text-red-600 underline"
+                      title="Bewerbung löschen"
+                      aria-label="Bewerbung löschen"
+                      className="text-red-600 hover:text-red-800 p-1"
                     >
-                      Löschen
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482 41.03 41.03 0 0 0-2.365-.298V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
                     </button>
                   </td>
                 </tr>
