@@ -3,6 +3,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ApplicationStatusPage } from './pages/ApplicationStatusPage'
+import { ApplyPage } from './pages/ApplyPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/status/:token" element={<ApplicationStatusPage />} />
+      <Route path="/apply/:tenantId" element={<ApplyPage />} />
       <Route
         path="/dashboard"
         element={

@@ -140,6 +140,15 @@ export function DashboardPage() {
           </p>
         )}
 
+        {tenantId && (
+          <p className="text-xs text-gray-500 bg-white rounded-lg shadow p-3">
+            Dein öffentlicher Bewerbungslink:{' '}
+            <span className="font-mono break-all">
+              {window.location.origin}/apply/{tenantId}
+            </span>
+          </p>
+        )}
+
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <form
