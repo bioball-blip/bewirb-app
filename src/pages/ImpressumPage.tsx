@@ -1,4 +1,8 @@
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+
 export function ImpressumPage() {
+  useDocumentTitle('Impressum')
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12">
       <div className="max-w-2xl mx-auto bg-white shadow rounded-lg p-8 flex flex-col gap-4 text-sm text-gray-700">

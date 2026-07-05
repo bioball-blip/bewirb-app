@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from '../components/Logo'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 type Application = {
   id: string
@@ -37,6 +38,8 @@ const employmentTypeLabels: Record<string, string> = {
 }
 
 export function DashboardPage() {
+  useDocumentTitle('Dashboard')
+
   const [tenantId, setTenantId] = useState<string | null>(null)
   const [tenantName, setTenantName] = useState<string | null>(null)
   const [applications, setApplications] = useState<Application[]>([])

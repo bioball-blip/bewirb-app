@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const statusLabels: Record<string, string> = {
   eingegangen: 'Eingegangen',
@@ -17,6 +18,8 @@ type StatusResult = {
 }
 
 export function ApplicationStatusPage() {
+  useDocumentTitle('Status deiner Bewerbung')
+
   const { token } = useParams()
   const [result, setResult] = useState<StatusResult | null>(null)
   const [notFound, setNotFound] = useState(false)

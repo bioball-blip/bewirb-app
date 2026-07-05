@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const employmentTypeLabels: Record<string, string> = {
   vollzeit: 'Vollzeit',
@@ -12,6 +13,7 @@ const employmentTypeLabels: Record<string, string> = {
 export function JobApplyPage() {
   const { jobPostingId } = useParams()
   const [title, setTitle] = useState<string | null>(null)
+  useDocumentTitle(title ? `Bewerbung: ${title}` : 'Bewerbung')
   const [description, setDescription] = useState<string | null>(null)
   const [employmentType, setEmploymentType] = useState<string | null>(null)
   const [location, setLocation] = useState<string | null>(null)

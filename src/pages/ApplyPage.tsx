@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 type OpenJobPosting = {
   id: string
@@ -19,6 +20,7 @@ const employmentTypeLabels: Record<string, string> = {
 export function ApplyPage() {
   const { tenantId } = useParams()
   const [tenantName, setTenantName] = useState<string | null>(null)
+  useDocumentTitle(tenantName ? `Bewerbung bei ${tenantName}` : 'Bewerbung')
   const [notFound, setNotFound] = useState(false)
   const [openJobs, setOpenJobs] = useState<OpenJobPosting[]>([])
 

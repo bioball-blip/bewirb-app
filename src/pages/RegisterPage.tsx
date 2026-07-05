@@ -3,8 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { translateAuthError } from '../lib/authErrors'
 import { Logo } from '../components/Logo'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export function RegisterPage() {
+  useDocumentTitle('Registrieren')
+
   const [tenantName, setTenantName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
