@@ -5,3 +5,8 @@
   --color-crewwerk-light: #1f4838;
   --color-crewwerk-cream: #f2ead9;
 }
+
+/* Sanftes Scrollen für Anker-Links (z. B. "Zugang anfragen" im Hero). */
+html {
+  scroll-behavior: smooth;
+}
