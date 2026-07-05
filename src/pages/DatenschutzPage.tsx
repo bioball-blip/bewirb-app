@@ -21,7 +21,7 @@ export function DatenschutzPage() {
 
         <section className="flex flex-col gap-1">
           <h2 className="font-medium text-gray-900">
-            2. Daten von Hotel-/Betriebs-Mitarbeitern (Dashboard-Nutzung)
+            2. Daten von Betriebs-Mitarbeitern (Dashboard-Nutzung)
           </h2>
           <p>
             Bei der Registrierung erheben wir E-Mail-Adresse, Passwort (in
@@ -43,8 +43,8 @@ export function DatenschutzPage() {
             Wer sich über ein Bewerbungsformular auf dieser Plattform
             bewirbt, übermittelt Name, E-Mail-Adresse und ggf. Angaben zur
             gewünschten Stelle. Diese Daten werden an den jeweiligen Betrieb
-            (Hotel/Gastronomiebetrieb) weitergegeben, bei dem die Bewerbung
-            eingereicht wurde, damit dieser die Bewerbung bearbeiten kann.
+            weitergegeben, bei dem die Bewerbung eingereicht wurde, damit
+            dieser die Bewerbung bearbeiten kann.
           </p>
           <p>
             Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO i. V. m. § 26 BDSG
