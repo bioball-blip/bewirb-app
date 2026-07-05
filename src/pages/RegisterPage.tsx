@@ -11,6 +11,7 @@ export function RegisterPage() {
   const [tenantName, setTenantName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -25,7 +26,7 @@ export function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { tenant_name: tenantName } },
+      options: { data: { tenant_name: tenantName, invite_code: inviteCode } },
     })
 
     setSubmitting(false)
@@ -76,6 +77,14 @@ export function RegisterPage() {
           minLength={6}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
+          className="border border-gray-300 rounded px-3 py-2"
+        />
+        <input
+          type="text"
+          placeholder="Einladungscode"
+          required
+          value={inviteCode}
+          onChange={(event) => setInviteCode(event.target.value)}
           className="border border-gray-300 rounded px-3 py-2"
         />
 

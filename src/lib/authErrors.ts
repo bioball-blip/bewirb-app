@@ -17,5 +17,12 @@ export function translateAuthError(message: string): string {
   if (message.includes('Email not confirmed')) {
     return 'Bitte bestätige zuerst deine E-Mail-Adresse über den Link, den wir dir geschickt haben.'
   }
+  if (
+    message.includes('invite_code_invalid') ||
+    message.includes('Database error saving new user') ||
+    message === '{}'
+  ) {
+    return 'Der Einladungscode ist ungültig. Bitte prüfe ihn und versuche es erneut.'
+  }
   return message
 }
