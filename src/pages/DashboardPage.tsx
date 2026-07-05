@@ -10,7 +10,16 @@ type Application = {
   applicant_email: string
   status: string
   created_at: string
+  updated_at: string
   job_postings: { title: string } | null
+}
+
+function daysUntilSixMonthsAfter(dateString: string): number {
+  const changed = new Date(dateString)
+  const threshold = new Date(changed)
+  threshold.setMonth(threshold.getMonth() + 6)
+  const diffMs = threshold.getTime() - Date.now()
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24))
 }
 
 type OpenJobPosting = {
@@ -65,7 +74,7 @@ export function DashboardPage() {
           supabase
             .from('applications')
             .select(
-              'id, applicant_name, applicant_email, status, created_at, job_postings(title)',
+              'id, applicant_name, applicant_email, status, created_at, updated_at, job_postings(title)',
             )
             .order('created_at', { ascending: false })
             .returns<Application[]>(),
@@ -115,7 +124,7 @@ export function DashboardPage() {
         applicant_email: newEmail,
       })
       .select(
-        'id, applicant_name, applicant_email, status, created_at, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -141,7 +150,7 @@ export function DashboardPage() {
       .update({ status: newStatus })
       .eq('id', applicationId)
       .select(
-        'id, applicant_name, applicant_email, status, created_at, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -158,6 +167,37 @@ export function DashboardPage() {
         application.id === applicationId ? data : application,
       ),
     )
+  }
+
+  async function handleDelete(application: Application) {
+    let message = `Bewerbung von ${application.applicant_name} wirklich löschen?`
+
+    if (application.status === 'abgelehnt') {
+      const daysRemaining = daysUntilSixMonthsAfter(application.updated_at)
+      if (daysRemaining > 0) {
+        message =
+          `Diese Bewerbung wurde erst vor Kurzem abgelehnt. Übliche Praxis ist, ` +
+          `abgelehnte Bewerbungen ca. 6 Monate aufzubewahren (wegen möglicher ` +
+          `Ansprüche nach dem AGG) - noch ${daysRemaining} Tage bis dahin. ` +
+          `Trotzdem jetzt löschen?`
+      }
+    }
+
+    if (!window.confirm(message)) return
+
+    setStatusError(null)
+
+    const { error } = await supabase
+      .from('applications')
+      .delete()
+      .eq('id', application.id)
+
+    if (error) {
+      setStatusError(error.message)
+      return
+    }
+
+    setApplications((prev) => prev.filter((a) => a.id !== application.id))
   }
 
   return (
@@ -281,13 +321,14 @@ export function DashboardPage() {
                 <th className="px-4 py-2 font-medium">Stelle</th>
                 <th className="px-4 py-2 font-medium">Status</th>
                 <th className="px-4 py-2 font-medium">Eingegangen am</th>
+                <th className="px-4 py-2 font-medium"></th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-4 text-gray-400 text-center"
                   >
                     Lädt…
@@ -297,7 +338,7 @@ export function DashboardPage() {
               {!loading && applications.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-4 text-gray-400 text-center"
                   >
                     Noch keine Bewerbungen.
@@ -335,6 +376,14 @@ export function DashboardPage() {
                     {new Date(application.created_at).toLocaleDateString(
                       'de-DE',
                     )}
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    <button
+                      onClick={() => handleDelete(application)}
+                      className="text-xs text-red-600 underline"
+                    >
+                      Löschen
+                    </button>
                   </td>
                 </tr>
               ))}
