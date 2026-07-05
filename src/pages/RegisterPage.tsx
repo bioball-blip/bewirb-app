@@ -42,8 +42,8 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 gap-6">
-      <Logo withTagline />
+    <div className="min-h-screen bg-crewwerk flex flex-col items-center justify-center px-4 gap-6">
+      <Logo withTagline variant="light" />
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow rounded-lg p-8 w-full max-w-sm flex flex-col gap-4"

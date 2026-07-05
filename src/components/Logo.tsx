@@ -2,16 +2,21 @@ type LogoProps = {
   withTagline?: boolean
   size?: 'sm' | 'lg'
   align?: 'center' | 'left'
+  variant?: 'dark' | 'light'
 }
 
 export function Logo({
   withTagline = false,
   size = 'lg',
   align = 'center',
+  variant = 'dark',
 }: LogoProps) {
   const iconHeight = size === 'lg' ? 28 : 20
   const iconWidth = (iconHeight * 40) / 24
   const textSize = size === 'lg' ? 'text-2xl' : 'text-lg'
+  const markColor = variant === 'light' ? 'text-crewwerk-cream' : 'text-crewwerk'
+  const taglineColor =
+    variant === 'light' ? 'text-crewwerk-cream/70' : 'text-gray-500'
 
   return (
     <div
@@ -26,7 +31,7 @@ export function Logo({
           height={iconHeight}
           viewBox="0 0 40 24"
           fill="none"
-          className="text-crewwerk shrink-0"
+          className={`${markColor} shrink-0`}
         >
           <circle cx="12" cy="4" r="2.5" fill="currentColor" />
           <circle cx="24" cy="4" r="2.5" fill="currentColor" />
@@ -47,13 +52,9 @@ export function Logo({
             strokeWidth="4.5"
           />
         </svg>
-        <span className={`${textSize} font-bold text-crewwerk`}>
-          Crewwerk
-        </span>
+        <span className={`${textSize} font-bold ${markColor}`}>Crewwerk</span>
       </div>
-      {withTagline && (
-        <p className="text-xs text-gray-500">Gemeinsam mehr erreichen.</p>
-      )}
+      {withTagline && <p className={`text-xs ${taglineColor}`}>Gemeinsam mehr erreichen.</p>}
     </div>
   )
 }

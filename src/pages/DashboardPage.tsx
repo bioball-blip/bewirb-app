@@ -158,21 +158,19 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="max-w-3xl mx-auto flex flex-col gap-6">
-        <div className="flex justify-between items-center">
-          <Logo size="sm" align="left" withTagline />
-          <button
-            onClick={handleLogout}
-            className="text-sm text-gray-500 underline"
-          >
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-crewwerk px-4 py-4 flex justify-between items-center">
+        <Logo size="sm" align="left" withTagline variant="light" />
+        <button
+          onClick={handleLogout}
+          className="text-sm text-crewwerk-cream underline"
+        >
+          Logout
+        </button>
+      </div>
 
-        <h1 className="text-2xl font-semibold text-crewwerk -mt-4">
-          Dashboard
-        </h1>
+      <div className="max-w-3xl mx-auto flex flex-col gap-6 px-4 py-8">
+        <h1 className="text-2xl font-semibold text-crewwerk">Dashboard</h1>
 
         {tenantName && (
           <p className="text-gray-700">

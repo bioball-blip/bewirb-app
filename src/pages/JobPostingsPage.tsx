@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { Logo } from '../components/Logo'
 
 type JobPosting = {
   id: string
@@ -121,16 +122,21 @@ export function JobPostingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="max-w-3xl mx-auto flex flex-col gap-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-crewwerk">
-            Stellenausschreibungen
-          </h1>
-          <Link to="/dashboard" className="text-sm text-crewwerk underline">
-            Zurück zum Dashboard
-          </Link>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-crewwerk px-4 py-4 flex justify-between items-center">
+        <Logo size="sm" align="left" variant="light" />
+        <Link
+          to="/dashboard"
+          className="text-sm text-crewwerk-cream underline"
+        >
+          Zurück zum Dashboard
+        </Link>
+      </div>
+
+      <div className="max-w-3xl mx-auto flex flex-col gap-6 px-4 py-8">
+        <h1 className="text-2xl font-semibold text-crewwerk">
+          Stellenausschreibungen
+        </h1>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
