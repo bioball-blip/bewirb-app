@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 type Application = {
@@ -11,14 +11,11 @@ type Application = {
   job_postings: { title: string } | null
 }
 
-type JobPosting = {
+type OpenJobPosting = {
   id: string
   title: string
-  status: string
-  description: string | null
   employment_type: string | null
   location: string | null
-  salary_range: string | null
 }
 
 const statusLabels: Record<string, string> = {
@@ -42,7 +39,7 @@ export function DashboardPage() {
   const [tenantId, setTenantId] = useState<string | null>(null)
   const [tenantName, setTenantName] = useState<string | null>(null)
   const [applications, setApplications] = useState<Application[]>([])
-  const [jobPostings, setJobPostings] = useState<JobPosting[]>([])
+  const [openJobPostings, setOpenJobPostings] = useState<OpenJobPosting[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,20 +51,11 @@ export function DashboardPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [statusError, setStatusError] = useState<string | null>(null)
 
-  const [newJobTitle, setNewJobTitle] = useState('')
-  const [newJobDescription, setNewJobDescription] = useState('')
-  const [newJobEmploymentType, setNewJobEmploymentType] = useState('')
-  const [newJobLocation, setNewJobLocation] = useState('')
-  const [newJobSalaryRange, setNewJobSalaryRange] = useState('')
-  const [creatingJob, setCreatingJob] = useState(false)
-  const [jobError, setJobError] = useState<string | null>(null)
-  const [updatingJobId, setUpdatingJobId] = useState<string | null>(null)
-
   const navigate = useNavigate()
 
   useEffect(() => {
     async function load() {
-      const [tenantResult, applicationsResult, jobPostingsResult] =
+      const [tenantResult, applicationsResult, openJobPostingsResult] =
         await Promise.all([
           supabase.from('tenants').select('id, name').single(),
           supabase
@@ -79,9 +67,8 @@ export function DashboardPage() {
             .returns<Application[]>(),
           supabase
             .from('job_postings')
-            .select(
-              'id, title, status, description, employment_type, location, salary_range',
-            )
+            .select('id, title, employment_type, location')
+            .eq('status', 'offen')
             .order('created_at', { ascending: false }),
         ])
 
@@ -94,8 +81,9 @@ export function DashboardPage() {
       if (applicationsResult.error) setError(applicationsResult.error.message)
       else setApplications(applicationsResult.data ?? [])
 
-      if (jobPostingsResult.error) setError(jobPostingsResult.error.message)
-      else setJobPostings(jobPostingsResult.data ?? [])
+      if (openJobPostingsResult.error)
+        setError(openJobPostingsResult.error.message)
+      else setOpenJobPostings(openJobPostingsResult.data ?? [])
 
       setLoading(false)
     }
@@ -168,68 +156,6 @@ export function DashboardPage() {
     )
   }
 
-  async function handleCreateJob(event: FormEvent) {
-    event.preventDefault()
-    if (!tenantId) return
-
-    setJobError(null)
-    setCreatingJob(true)
-
-    const { data, error } = await supabase
-      .from('job_postings')
-      .insert({
-        tenant_id: tenantId,
-        title: newJobTitle,
-        description: newJobDescription || null,
-        employment_type: newJobEmploymentType || null,
-        location: newJobLocation || null,
-        salary_range: newJobSalaryRange || null,
-      })
-      .select(
-        'id, title, status, description, employment_type, location, salary_range',
-      )
-      .single()
-
-    setCreatingJob(false)
-
-    if (error) {
-      setJobError(error.message)
-      return
-    }
-
-    setJobPostings((prev) => [data, ...prev])
-    setNewJobTitle('')
-    setNewJobDescription('')
-    setNewJobEmploymentType('')
-    setNewJobLocation('')
-    setNewJobSalaryRange('')
-  }
-
-  async function handleToggleJobStatus(jobId: string, currentStatus: string) {
-    setJobError(null)
-    setUpdatingJobId(jobId)
-
-    const nextStatus = currentStatus === 'offen' ? 'geschlossen' : 'offen'
-
-    const { data, error } = await supabase
-      .from('job_postings')
-      .update({ status: nextStatus })
-      .eq('id', jobId)
-      .select(
-        'id, title, status, description, employment_type, location, salary_range',
-      )
-      .single()
-
-    setUpdatingJobId(null)
-
-    if (error) {
-      setJobError(error.message)
-      return
-    }
-
-    setJobPostings((prev) => prev.map((job) => (job.id === jobId ? data : job)))
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
@@ -261,135 +187,39 @@ export function DashboardPage() {
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <div className="bg-white rounded-lg shadow p-4 flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-gray-900">
-            Stellenausschreibungen
-          </h2>
-
-          <form onSubmit={handleCreateJob} className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Titel der Stelle
-              </label>
-              <input
-                type="text"
-                required
-                value={newJobTitle}
-                onChange={(event) => setNewJobTitle(event.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Beschreibung (Aufgaben, Anforderungen)
-              </label>
-              <textarea
-                value={newJobDescription}
-                onChange={(event) => setNewJobDescription(event.target.value)}
-                rows={3}
-                className="border border-gray-300 rounded px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-xs text-gray-500">
-                  Beschäftigungsart
-                </label>
-                <select
-                  value={newJobEmploymentType}
-                  onChange={(event) =>
-                    setNewJobEmploymentType(event.target.value)
-                  }
-                  className="border border-gray-300 rounded px-3 py-2 text-sm"
-                >
-                  <option value="">Keine Angabe</option>
-                  {Object.entries(employmentTypeLabels).map(
-                    ([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-xs text-gray-500">Standort</label>
-                <input
-                  type="text"
-                  value={newJobLocation}
-                  onChange={(event) => setNewJobLocation(event.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-xs text-gray-500">
-                  Gehaltsangabe
-                </label>
-                <input
-                  type="text"
-                  placeholder="z. B. 18-20€/Std."
-                  value={newJobSalaryRange}
-                  onChange={(event) =>
-                    setNewJobSalaryRange(event.target.value)
-                  }
-                  className="border border-gray-300 rounded px-3 py-2 text-sm"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={creatingJob || !tenantId}
-              className="self-start bg-gray-900 text-white rounded px-4 py-2 text-sm disabled:opacity-50"
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-gray-900">
+              Offene Stellenausschreibungen
+            </h2>
+            <Link
+              to="/dashboard/jobs"
+              className="text-sm text-gray-500 underline"
             >
-              {creatingJob ? 'Wird angelegt…' : 'Stelle anlegen'}
-            </button>
-          </form>
-          {jobError && <p className="text-red-600 text-sm">{jobError}</p>}
+              Stellen verwalten
+            </Link>
+          </div>
 
-          {jobPostings.length === 0 && (
+          {!loading && openJobPostings.length === 0 && (
             <p className="text-gray-400 text-sm">
-              Noch keine Stellenausschreibungen.
+              Aktuell keine offenen Stellen.
             </p>
           )}
 
-          {jobPostings.map((job) => (
+          {openJobPostings.map((job) => (
             <div
               key={job.id}
-              className="border-t border-gray-100 pt-3 flex flex-col gap-1"
+              className="border-t border-gray-100 first:border-t-0 pt-2 first:pt-0"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-900">{job.title}</span>
-                <button
-                  onClick={() => handleToggleJobStatus(job.id, job.status)}
-                  disabled={updatingJobId === job.id}
-                  className={
-                    'text-xs rounded px-2 py-1 disabled:opacity-50 ' +
-                    (job.status === 'offen'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-500')
-                  }
-                >
-                  {job.status === 'offen' ? 'Offen' : 'Geschlossen'}
-                </button>
-              </div>
-              <span className="text-xs text-gray-500">
+              <span className="text-sm text-gray-900">{job.title}</span>
+              <span className="block text-xs text-gray-500">
                 {[
                   job.employment_type
                     ? employmentTypeLabels[job.employment_type]
                     : null,
                   job.location,
-                  job.salary_range,
                 ]
                   .filter(Boolean)
                   .join(' · ')}
-              </span>
-              {job.description && (
-                <p className="text-xs text-gray-500">{job.description}</p>
-              )}
-              <span className="text-xs text-gray-500 font-mono break-all">
-                {window.location.origin}/apply/job/{job.id}
               </span>
             </div>
           ))}

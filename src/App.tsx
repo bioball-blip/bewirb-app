@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { ApplicationStatusPage } from './pages/ApplicationStatusPage'
 import { ApplyPage } from './pages/ApplyPage'
 import { JobApplyPage } from './pages/JobApplyPage'
+import { JobPostingsPage } from './pages/JobPostingsPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 function App() {
@@ -20,6 +21,14 @@ function App() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/jobs"
+        element={
+          <ProtectedRoute>
+            <JobPostingsPage />
           </ProtectedRoute>
         }
       />
