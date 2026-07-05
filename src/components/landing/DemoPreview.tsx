@@ -8,6 +8,12 @@ type DemoApplication = {
   status: string
 }
 
+type DemoJobPosting = {
+  id: string
+  title: string
+  employmentType: string
+}
+
 const statusLabels: Record<string, string> = {
   eingegangen: 'Eingegangen',
   gelesen: 'Gelesen',
@@ -25,6 +31,15 @@ const statusStyles: Record<string, string> = {
 }
 
 const statusOptions = Object.keys(statusLabels)
+
+const employmentTypeLabels: Record<string, string> = {
+  vollzeit: 'Vollzeit',
+  teilzeit: 'Teilzeit',
+  aushilfe: 'Aushilfe',
+  ausbildung: 'Ausbildung',
+}
+
+const employmentTypeOptions = Object.keys(employmentTypeLabels)
 
 const initialDemoApplications: DemoApplication[] = [
   {
@@ -57,9 +72,19 @@ const initialDemoApplications: DemoApplication[] = [
   },
 ]
 
+const initialDemoJobPostings: DemoJobPosting[] = [
+  { id: 'j1', title: 'Rezeptionist:in', employmentType: 'vollzeit' },
+  { id: 'j2', title: 'Koch/Köchin', employmentType: 'teilzeit' },
+]
+
 export function DemoPreview() {
+  const [view, setView] = useState<'applications' | 'jobs'>('applications')
   const [applications, setApplications] = useState(initialDemoApplications)
   const [previewId, setPreviewId] = useState('3')
+
+  const [jobPostings, setJobPostings] = useState(initialDemoJobPostings)
+  const [newJobTitle, setNewJobTitle] = useState('')
+  const [newJobType, setNewJobType] = useState('vollzeit')
 
   const previewApplication =
     applications.find((application) => application.id === previewId) ??
@@ -91,6 +116,24 @@ export function DemoPreview() {
     setPreviewId(id)
   }
 
+  function handleAddJob(event: React.FormEvent) {
+    event.preventDefault()
+    const title = newJobTitle.trim()
+    if (!title) return
+    setJobPostings((prev) => [
+      { id: String(Date.now()), title, employmentType: newJobType },
+      ...prev,
+    ])
+    setNewJobTitle('')
+    setNewJobType('vollzeit')
+  }
+
+  const tabClass = (active: boolean) =>
+    'text-xs font-medium rounded-full px-3.5 py-1.5 transition-colors ' +
+    (active
+      ? 'bg-crewwerk text-crewwerk-cream'
+      : 'text-gray-500 hover:bg-gray-100')
+
   return (
     <div className="flex flex-col lg:flex-row gap-10 items-center lg:items-start">
       {/* Browser-Fenster-Mock des Dashboards */}
@@ -103,77 +146,175 @@ export function DemoPreview() {
             crewwerk.de/dashboard · Demo
           </span>
         </div>
-        <div className="p-5 flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <h4 className="text-sm font-semibold text-gray-900">
-              Bewerbungen
-            </h4>
+
+        <div className="px-5 pt-4">
+          <div className="inline-flex gap-1 bg-gray-50 rounded-full p-1">
             <button
-              onClick={handleAddDemoRow}
-              className="text-xs font-medium bg-crewwerk text-crewwerk-cream rounded-full px-3.5 py-1.5 hover:bg-crewwerk-light transition-colors"
+              onClick={() => setView('applications')}
+              className={tabClass(view === 'applications')}
             >
-              + Bewerbung anlegen
+              Bewerbungen
+            </button>
+            <button
+              onClick={() => setView('jobs')}
+              className={tabClass(view === 'jobs')}
+            >
+              Stellen
             </button>
           </div>
-          <div className="overflow-hidden rounded-lg border border-gray-100">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 text-gray-500">
-                <tr>
-                  <th className="px-3 py-2 font-medium">Bewerber:in</th>
-                  <th className="px-3 py-2 font-medium">Stelle</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {applications.map((application) => (
-                  <tr
-                    key={application.id}
-                    onClick={() => setPreviewId(application.id)}
-                    className={
-                      'border-t border-gray-100 cursor-pointer transition-colors ' +
-                      (application.id === previewId
-                        ? 'bg-crewwerk-cream/50'
-                        : 'hover:bg-gray-50')
-                    }
-                  >
-                    <td className="px-3 py-2.5">
-                      <div className="text-gray-900 font-medium">
-                        {application.name}
-                      </div>
-                      <div className="text-gray-400">{application.email}</div>
-                    </td>
-                    <td className="px-3 py-2.5 text-gray-600">
-                      {application.role}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <select
-                        value={application.status}
-                        onClick={(event) => event.stopPropagation()}
-                        onChange={(event) =>
-                          handleStatusChange(application.id, event.target.value)
-                        }
-                        className={
-                          'rounded-full border-0 px-2.5 py-1 text-xs font-medium cursor-pointer ' +
-                          (statusStyles[application.status] ?? '')
-                        }
-                      >
-                        {statusOptions.map((status) => (
-                          <option key={status} value={status}>
-                            {statusLabels[status]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="text-xs text-gray-400">
-            Klick auf eine Zeile oder ändere den Status — rechts siehst du,
-            was der/die Bewerber:in dann sieht.
-          </p>
         </div>
+
+        {view === 'applications' ? (
+          <div className="p-5 flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <h4 className="text-sm font-semibold text-gray-900">
+                Bewerbungen
+              </h4>
+              <button
+                onClick={handleAddDemoRow}
+                className="text-xs font-medium bg-crewwerk text-crewwerk-cream rounded-full px-3.5 py-1.5 hover:bg-crewwerk-light transition-colors"
+              >
+                + Bewerbung anlegen
+              </button>
+            </div>
+            <div className="overflow-hidden rounded-lg border border-gray-100">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-gray-50 text-gray-500">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Bewerber:in</th>
+                    <th className="px-3 py-2 font-medium">Stelle</th>
+                    <th className="px-3 py-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {applications.map((application) => (
+                    <tr
+                      key={application.id}
+                      onClick={() => setPreviewId(application.id)}
+                      className={
+                        'border-t border-gray-100 cursor-pointer transition-colors ' +
+                        (application.id === previewId
+                          ? 'bg-crewwerk-cream/50'
+                          : 'hover:bg-gray-50')
+                      }
+                    >
+                      <td className="px-3 py-2.5">
+                        <div className="text-gray-900 font-medium">
+                          {application.name}
+                        </div>
+                        <div className="text-gray-400">
+                          {application.email}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 text-gray-600">
+                        {application.role}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <select
+                          value={application.status}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) =>
+                            handleStatusChange(
+                              application.id,
+                              event.target.value,
+                            )
+                          }
+                          className={
+                            'rounded-full border-0 px-2.5 py-1 text-xs font-medium cursor-pointer ' +
+                            (statusStyles[application.status] ?? '')
+                          }
+                        >
+                          {statusOptions.map((status) => (
+                            <option key={status} value={status}>
+                              {statusLabels[status]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-gray-400">
+              Klick auf eine Zeile oder ändere den Status — rechts siehst du,
+              was der/die Bewerber:in dann sieht.
+            </p>
+          </div>
+        ) : (
+          <div className="p-5 flex flex-col gap-4">
+            <h4 className="text-sm font-semibold text-gray-900">
+              Stelle ausschreiben
+            </h4>
+            <form
+              onSubmit={handleAddJob}
+              className="flex flex-col sm:flex-row gap-2 sm:items-end"
+            >
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-[11px] text-gray-500">
+                  Titel der Stelle
+                </label>
+                <input
+                  type="text"
+                  value={newJobTitle}
+                  onChange={(event) => setNewJobTitle(event.target.value)}
+                  placeholder="z. B. Servicekraft"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-crewwerk focus:ring-2 focus:ring-crewwerk/15"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] text-gray-500">
+                  Beschäftigung
+                </label>
+                <select
+                  value={newJobType}
+                  onChange={(event) => setNewJobType(event.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-crewwerk"
+                >
+                  {employmentTypeOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {employmentTypeLabels[type]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="text-xs font-medium bg-crewwerk text-crewwerk-cream rounded-full px-3.5 py-2 hover:bg-crewwerk-light transition-colors"
+              >
+                + Stelle anlegen
+              </button>
+            </form>
+
+            <div className="flex flex-col gap-2">
+              {jobPostings.map((job) => (
+                <div
+                  key={job.id}
+                  className="border border-gray-100 rounded-lg px-3 py-2.5 flex flex-col gap-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-900">
+                      {job.title}
+                    </span>
+                    <span className="text-[10px] font-medium rounded-full px-2 py-0.5 bg-emerald-50 text-emerald-700">
+                      Offen
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-gray-500">
+                    {employmentTypeLabels[job.employmentType]}
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-mono truncate">
+                    crewwerk.de/apply/job/{job.id}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400">
+              Jede Stelle bekommt automatisch einen eigenen Bewerbungslink
+              zum Teilen.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Handy-Mock der Bewerber-Statusseite */}
