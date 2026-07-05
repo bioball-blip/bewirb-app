@@ -75,7 +75,8 @@ export function DashboardPage() {
             .select(
               'id, applicant_name, applicant_email, status, created_at, job_postings(title)',
             )
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false })
+            .returns<Application[]>(),
           supabase
             .from('job_postings')
             .select(
@@ -124,6 +125,7 @@ export function DashboardPage() {
       .select(
         'id, applicant_name, applicant_email, status, created_at, job_postings(title)',
       )
+      .returns<Application[]>()
       .single()
 
     setCreating(false)
@@ -149,6 +151,7 @@ export function DashboardPage() {
       .select(
         'id, applicant_name, applicant_email, status, created_at, job_postings(title)',
       )
+      .returns<Application[]>()
       .single()
 
     setUpdatingId(null)
