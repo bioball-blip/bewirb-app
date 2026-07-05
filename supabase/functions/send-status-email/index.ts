@@ -63,7 +63,7 @@ export default {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Bewirb. <onboarding@resend.dev>",
+        from: "Crewwerk <noreply@crewwerk.de>",
         to: [record.applicant_email],
         subject: `Update zu deiner Bewerbung: ${statusLabel}`,
         html: `
