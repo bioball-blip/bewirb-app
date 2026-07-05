@@ -160,7 +160,7 @@ export function DashboardPage() {
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-crewwerk">Dashboard</h1>
           <button
             onClick={handleLogout}
             className="text-sm text-gray-500 underline"
@@ -191,10 +191,7 @@ export function DashboardPage() {
             <h2 className="text-sm font-semibold text-gray-900">
               Offene Stellenausschreibungen
             </h2>
-            <Link
-              to="/dashboard/jobs"
-              className="text-sm text-gray-500 underline"
-            >
+            <Link to="/dashboard/jobs" className="text-sm text-crewwerk underline">
               Stellen verwalten
             </Link>
           </div>
@@ -255,7 +252,7 @@ export function DashboardPage() {
           <button
             type="submit"
             disabled={creating || !tenantId}
-            className="bg-gray-900 text-white rounded px-4 py-2 text-sm disabled:opacity-50"
+            className="bg-crewwerk text-crewwerk-cream rounded px-4 py-2 text-sm hover:bg-crewwerk-light disabled:opacity-50"
           >
             {creating ? 'Wird angelegt…' : 'Bewerbung anlegen'}
           </button>

@@ -139,7 +139,7 @@ export function JobApplyPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-gray-900 text-white rounded px-3 py-2 disabled:opacity-50"
+          className="bg-crewwerk text-crewwerk-cream rounded px-3 py-2 hover:bg-crewwerk-light disabled:opacity-50"
         >
           {submitting ? 'Wird gesendet…' : 'Bewerbung absenden'}
         </button>

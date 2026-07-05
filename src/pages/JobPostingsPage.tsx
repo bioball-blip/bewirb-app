@@ -124,10 +124,10 @@ export function JobPostingsPage() {
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-2xl font-semibold text-crewwerk">
             Stellenausschreibungen
           </h1>
-          <Link to="/dashboard" className="text-sm text-gray-500 underline">
+          <Link to="/dashboard" className="text-sm text-crewwerk underline">
             Zurück zum Dashboard
           </Link>
         </div>
@@ -205,7 +205,7 @@ export function JobPostingsPage() {
           <button
             type="submit"
             disabled={creatingJob || !tenantId}
-            className="self-start bg-gray-900 text-white rounded px-4 py-2 text-sm disabled:opacity-50"
+            className="self-start bg-crewwerk text-crewwerk-cream rounded px-4 py-2 text-sm hover:bg-crewwerk-light disabled:opacity-50"
           >
             {creatingJob ? 'Wird angelegt…' : 'Stelle anlegen'}
           </button>
@@ -233,7 +233,7 @@ export function JobPostingsPage() {
                   className={
                     'text-xs rounded px-2 py-1 disabled:opacity-50 ' +
                     (job.status === 'offen'
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-crewwerk-cream text-crewwerk'
                       : 'bg-gray-100 text-gray-500')
                   }
                 >

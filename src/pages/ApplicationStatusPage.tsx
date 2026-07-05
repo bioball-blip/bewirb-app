@@ -48,7 +48,7 @@ export function ApplicationStatusPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white shadow rounded-lg p-8 w-full max-w-sm text-center flex flex-col gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">
+        <h1 className="text-xl font-semibold text-crewwerk">
           Status deiner Bewerbung
         </h1>
 
@@ -62,7 +62,7 @@ export function ApplicationStatusPage() {
         {result && (
           <>
             <p className="text-gray-500">Hallo {result.applicant_name},</p>
-            <p className="text-2xl font-semibold text-gray-900">
+            <p className="text-2xl font-semibold text-crewwerk">
               {statusLabels[result.status] ?? result.status}
             </p>
             <p className="text-xs text-gray-400">

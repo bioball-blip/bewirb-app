@@ -117,7 +117,7 @@ export function ApplyPage() {
                   <li key={job.id}>
                     <Link
                       to={`/apply/job/${job.id}`}
-                      className="block border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 hover:bg-gray-50"
+                      className="block border border-gray-200 rounded px-3 py-2 text-sm text-crewwerk hover:bg-crewwerk-cream/40"
                     >
                       {job.title}
                       {meta && (
@@ -168,7 +168,7 @@ export function ApplyPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="bg-gray-900 text-white rounded px-3 py-2 disabled:opacity-50"
+            className="bg-crewwerk text-crewwerk-cream rounded px-3 py-2 hover:bg-crewwerk-light disabled:opacity-50"
           >
             {submitting ? 'Wird gesendet…' : 'Bewerbung absenden'}
           </button>
