@@ -5,6 +5,15 @@ import { supabase } from '../lib/supabase'
 type OpenJobPosting = {
   id: string
   title: string
+  employment_type: string | null
+  location: string | null
+}
+
+const employmentTypeLabels: Record<string, string> = {
+  vollzeit: 'Vollzeit',
+  teilzeit: 'Teilzeit',
+  aushilfe: 'Aushilfe',
+  ausbildung: 'Ausbildung',
 }
 
 export function ApplyPage() {
@@ -94,16 +103,32 @@ export function ApplyPage() {
               Offene Stellen bei {tenantName}
             </h2>
             <ul className="flex flex-col gap-2">
-              {openJobs.map((job) => (
-                <li key={job.id}>
-                  <Link
-                    to={`/apply/job/${job.id}`}
-                    className="block border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 hover:bg-gray-50"
-                  >
-                    {job.title}
-                  </Link>
-                </li>
-              ))}
+              {openJobs.map((job) => {
+                const meta = [
+                  job.employment_type
+                    ? employmentTypeLabels[job.employment_type]
+                    : null,
+                  job.location,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+
+                return (
+                  <li key={job.id}>
+                    <Link
+                      to={`/apply/job/${job.id}`}
+                      className="block border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 hover:bg-gray-50"
+                    >
+                      {job.title}
+                      {meta && (
+                        <span className="block text-xs text-gray-500">
+                          {meta}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           </div>
         )}

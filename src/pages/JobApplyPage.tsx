@@ -2,10 +2,20 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+const employmentTypeLabels: Record<string, string> = {
+  vollzeit: 'Vollzeit',
+  teilzeit: 'Teilzeit',
+  aushilfe: 'Aushilfe',
+  ausbildung: 'Ausbildung',
+}
+
 export function JobApplyPage() {
   const { jobPostingId } = useParams()
   const [title, setTitle] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
+  const [employmentType, setEmploymentType] = useState<string | null>(null)
+  const [location, setLocation] = useState<string | null>(null)
+  const [salaryRange, setSalaryRange] = useState<string | null>(null)
   const [tenantId, setTenantId] = useState<string | null>(null)
   const [notFound, setNotFound] = useState(false)
 
@@ -27,6 +37,9 @@ export function JobApplyPage() {
         }
         setTitle(data[0].title)
         setDescription(data[0].description)
+        setEmploymentType(data[0].employment_type)
+        setLocation(data[0].location)
+        setSalaryRange(data[0].salary_range)
         setTenantId(data[0].tenant_id)
       })
   }, [jobPostingId])
@@ -80,6 +93,14 @@ export function JobApplyPage() {
     )
   }
 
+  const metaInfo = [
+    employmentType ? employmentTypeLabels[employmentType] : null,
+    location,
+    salaryRange,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <form
@@ -89,7 +110,12 @@ export function JobApplyPage() {
         <h1 className="text-xl font-semibold text-gray-900">
           {title ? `Bewirb dich als ${title}` : 'Bewerbung'}
         </h1>
-        {description && <p className="text-sm text-gray-500">{description}</p>}
+        {metaInfo && <p className="text-xs text-gray-500">{metaInfo}</p>}
+        {description && (
+          <p className="text-sm text-gray-500 whitespace-pre-wrap">
+            {description}
+          </p>
+        )}
 
         <input
           type="text"
