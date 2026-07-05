@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { Logo } from '../components/Logo'
 
 type Application = {
   id: string
@@ -160,7 +161,7 @@ export function DashboardPage() {
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-crewwerk">Dashboard</h1>
+          <Logo size="sm" align="left" withTagline />
           <button
             onClick={handleLogout}
             className="text-sm text-gray-500 underline"
@@ -168,6 +169,10 @@ export function DashboardPage() {
             Logout
           </button>
         </div>
+
+        <h1 className="text-2xl font-semibold text-crewwerk -mt-4">
+          Dashboard
+        </h1>
 
         {tenantName && (
           <p className="text-gray-700">

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { translateAuthError } from '../lib/authErrors'
+import { Logo } from '../components/Logo'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -31,7 +32,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 gap-6">
+      <Logo withTagline />
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow rounded-lg p-8 w-full max-w-sm flex flex-col gap-4"
