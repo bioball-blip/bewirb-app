@@ -55,6 +55,14 @@ const statusLabels: Record<string, string> = {
 
 const statusOptions = Object.keys(statusLabels)
 
+const statusStyles: Record<string, string> = {
+  eingegangen: 'bg-gray-100 text-gray-600',
+  gelesen: 'bg-sky-50 text-sky-700',
+  eingeladen: 'bg-amber-50 text-amber-700',
+  angenommen: 'bg-emerald-50 text-emerald-700',
+  abgelehnt: 'bg-red-50 text-red-600',
+}
+
 const employmentTypeLabels: Record<string, string> = {
   vollzeit: 'Vollzeit',
   teilzeit: 'Teilzeit',
@@ -487,7 +495,10 @@ export function DashboardPage() {
                               event.target.value,
                             )
                           }
-                          className="border border-gray-300 rounded px-2 py-1 text-sm disabled:opacity-50"
+                          className={
+                            'rounded-full border-0 px-2.5 py-1 text-sm font-medium cursor-pointer disabled:opacity-50 ' +
+                            (statusStyles[application.status] ?? '')
+                          }
                         >
                           {statusOptions.map((status) => (
                             <option key={status} value={status}>
