@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from '../components/Logo'
+import { QrCodeButton } from '../components/QrCodeButton'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 type JobPosting = {
@@ -263,9 +264,15 @@ export function JobPostingsPage() {
               {job.description && (
                 <p className="text-xs text-gray-500">{job.description}</p>
               )}
-              <span className="text-xs text-gray-500 font-mono break-all">
-                {window.location.origin}/apply/job/{job.id}
-              </span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-gray-500 font-mono break-all">
+                  {window.location.origin}/apply/job/{job.id}
+                </span>
+                <QrCodeButton
+                  url={`${window.location.origin}/apply/job/${job.id}`}
+                  subtitle={`als ${job.title}`}
+                />
+              </div>
             </div>
           ))}
         </div>

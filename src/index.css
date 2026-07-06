@@ -10,3 +10,20 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Beim Drucken (QR-Code-Plakat) nur den Druckbereich zeigen. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #qr-print-area,
+  #qr-print-area * {
+    visibility: visible;
+  }
+  #qr-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

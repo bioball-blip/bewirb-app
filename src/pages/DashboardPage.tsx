@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from '../components/Logo'
 import { FeedbackButton } from '../components/FeedbackButton'
+import { QrCodeButton } from '../components/QrCodeButton'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 type Application = {
@@ -334,12 +335,18 @@ export function DashboardPage() {
         )}
 
         {tenantId && (
-          <p className="text-xs text-gray-500 bg-white rounded-lg shadow p-3">
-            Allgemeiner Bewerbungslink (Initiativbewerbung):{' '}
-            <span className="font-mono break-all">
-              {window.location.origin}/apply/{tenantId}
+          <div className="text-xs text-gray-500 bg-white rounded-lg shadow p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span>
+              Allgemeiner Bewerbungslink (Initiativbewerbung):{' '}
+              <span className="font-mono break-all">
+                {window.location.origin}/apply/{tenantId}
+              </span>
             </span>
-          </p>
+            <QrCodeButton
+              url={`${window.location.origin}/apply/${tenantId}`}
+              subtitle={tenantName ? `bei ${tenantName}` : undefined}
+            />
+          </div>
         )}
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
