@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Logo } from '../components/Logo'
 import { FeedbackButton } from '../components/FeedbackButton'
 import { QrCodeButton } from '../components/QrCodeButton'
+import { downloadApplicationPdf } from '../lib/applicationPdf'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 type Application = {
@@ -91,11 +92,26 @@ function DetailItem({
   )
 }
 
-function ApplicationDetails({ application }: { application: Application }) {
+function ApplicationDetails({
+  application,
+  tenantName,
+}: {
+  application: Application
+  tenantName: string | null
+}) {
   const workingTime = application.desired_working_time
     ? (workingTimeLabels[application.desired_working_time] ??
       application.desired_working_time)
     : null
+
+  const pdfButton = (
+    <button
+      onClick={() => downloadApplicationPdf(application, tenantName)}
+      className="self-start text-xs font-medium text-crewwerk border border-crewwerk/30 rounded-full px-3 py-1.5 hover:bg-crewwerk-cream/50"
+    >
+      Als PDF herunterladen
+    </button>
+  )
 
   const hasAny =
     application.phone ||
@@ -109,14 +125,18 @@ function ApplicationDetails({ application }: { application: Application }) {
 
   if (!hasAny) {
     return (
-      <p className="text-sm text-gray-400">
-        Keine weiteren Angaben. E-Mail: {application.applicant_email}
-      </p>
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-gray-400">
+          Keine weiteren Angaben. E-Mail: {application.applicant_email}
+        </p>
+        {pdfButton}
+      </div>
     )
   }
 
   return (
-    <div className="grid sm:grid-cols-2 gap-4">
+    <div className="flex flex-col gap-4">
+      <div className="grid sm:grid-cols-2 gap-4">
       <DetailItem label="Telefon" value={application.phone} />
       <DetailItem label="Wohnort" value={application.location} />
       <DetailItem label="Verfügbar ab" value={application.available_from} />
@@ -145,6 +165,8 @@ function ApplicationDetails({ application }: { application: Application }) {
         value={application.applicant_message}
         wide
       />
+      </div>
+      {pdfButton}
     </div>
   )
 }
@@ -544,7 +566,10 @@ export function DashboardPage() {
                     {expanded && (
                       <tr className="bg-gray-50/70">
                         <td colSpan={5} className="px-6 py-4">
-                          <ApplicationDetails application={application} />
+                          <ApplicationDetails
+                            application={application}
+                            tenantName={tenantName}
+                          />
                         </td>
                       </tr>
                     )}
