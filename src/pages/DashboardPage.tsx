@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from '../components/Logo'
+import { FeedbackButton } from '../components/FeedbackButton'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 type Application = {
@@ -210,12 +211,15 @@ export function DashboardPage() {
           variant="light"
           linkTo="/dashboard"
         />
-        <button
-          onClick={handleLogout}
-          className="text-sm text-crewwerk-cream underline"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-4">
+          <FeedbackButton tenantId={tenantId} />
+          <button
+            onClick={handleLogout}
+            className="text-sm text-crewwerk-cream underline"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="max-w-4xl mx-auto flex flex-col gap-6 px-4 py-8">
