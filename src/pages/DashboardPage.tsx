@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { Fragment, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from '../components/Logo'
@@ -12,7 +12,22 @@ type Application = {
   status: string
   created_at: string
   updated_at: string
+  phone: string | null
+  location: string | null
+  available_from: string | null
+  desired_working_time: string | null
+  work_experience: string | null
+  education: string | null
+  languages: string | null
+  applicant_message: string | null
   job_postings: { title: string } | null
+}
+
+const workingTimeLabels: Record<string, string> = {
+  vollzeit: 'Vollzeit',
+  teilzeit: 'Teilzeit',
+  aushilfe: 'Aushilfe',
+  egal: 'Egal',
 }
 
 function daysUntilSixMonthsAfter(dateString: string): number {
@@ -47,6 +62,84 @@ const employmentTypeLabels: Record<string, string> = {
   ausbildung: 'Ausbildung',
 }
 
+function DetailItem({
+  label,
+  value,
+  wide = false,
+}: {
+  label: string
+  value: string | null
+  wide?: boolean
+}) {
+  if (!value) return null
+  return (
+    <div className={'flex flex-col gap-0.5 ' + (wide ? 'sm:col-span-2' : '')}>
+      <span className="text-xs font-medium text-gray-500">{label}</span>
+      <span className="text-sm text-gray-800 whitespace-pre-wrap">
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function ApplicationDetails({ application }: { application: Application }) {
+  const workingTime = application.desired_working_time
+    ? (workingTimeLabels[application.desired_working_time] ??
+      application.desired_working_time)
+    : null
+
+  const hasAny =
+    application.phone ||
+    application.location ||
+    application.available_from ||
+    (workingTime && application.desired_working_time !== 'egal') ||
+    application.work_experience ||
+    application.education ||
+    application.languages ||
+    application.applicant_message
+
+  if (!hasAny) {
+    return (
+      <p className="text-sm text-gray-400">
+        Keine weiteren Angaben. E-Mail: {application.applicant_email}
+      </p>
+    )
+  }
+
+  return (
+    <div className="grid sm:grid-cols-2 gap-4">
+      <DetailItem label="Telefon" value={application.phone} />
+      <DetailItem label="Wohnort" value={application.location} />
+      <DetailItem label="Verfügbar ab" value={application.available_from} />
+      <DetailItem
+        label="Gewünschte Arbeitszeit"
+        value={
+          application.desired_working_time &&
+          application.desired_working_time !== 'egal'
+            ? workingTime
+            : null
+        }
+      />
+      <DetailItem
+        label="Berufserfahrung"
+        value={application.work_experience}
+        wide
+      />
+      <DetailItem
+        label="Ausbildung & Abschlüsse"
+        value={application.education}
+        wide
+      />
+      <DetailItem label="Sprachen" value={application.languages} wide />
+      <DetailItem
+        label="Nachricht an den Betrieb"
+        value={application.applicant_message}
+        wide
+      />
+    </div>
+  )
+}
+
 export function DashboardPage() {
   useDocumentTitle('Dashboard')
 
@@ -64,6 +157,7 @@ export function DashboardPage() {
 
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [statusError, setStatusError] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const navigate = useNavigate()
 
@@ -75,7 +169,7 @@ export function DashboardPage() {
           supabase
             .from('applications')
             .select(
-              'id, applicant_name, applicant_email, status, created_at, updated_at, job_postings(title)',
+              'id, applicant_name, applicant_email, status, created_at, updated_at, phone, location, available_from, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
             )
             .order('created_at', { ascending: false })
             .returns<Application[]>(),
@@ -125,7 +219,7 @@ export function DashboardPage() {
         applicant_email: newEmail,
       })
       .select(
-        'id, applicant_name, applicant_email, status, created_at, updated_at, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, location, available_from, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -151,7 +245,7 @@ export function DashboardPage() {
       .update({ status: newStatus })
       .eq('id', applicationId)
       .select(
-        'id, applicant_name, applicant_email, status, created_at, updated_at, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, location, available_from, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -348,63 +442,97 @@ export function DashboardPage() {
                   </td>
                 </tr>
               )}
-              {applications.map((application) => (
-                <tr key={application.id} className="border-t border-gray-100">
-                  <td className="px-3 py-2">
-                    <div className="text-gray-900">
-                      {application.applicant_name}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {application.applicant_email}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-gray-600">
-                    {application.job_postings?.title ?? 'Initiativbewerbung'}
-                  </td>
-                  <td className="px-3 py-2 text-gray-600">
-                    <select
-                      value={application.status}
-                      disabled={updatingId === application.id}
-                      onChange={(event) =>
-                        handleStatusChange(application.id, event.target.value)
-                      }
-                      className="border border-gray-300 rounded px-2 py-1 text-sm disabled:opacity-50"
-                    >
-                      {statusOptions.map((status) => (
-                        <option key={status} value={status}>
-                          {statusLabels[status]}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                    {new Date(application.created_at).toLocaleDateString(
-                      'de-DE',
+              {applications.map((application) => {
+                const expanded = expandedId === application.id
+                return (
+                  <Fragment key={application.id}>
+                    <tr className="border-t border-gray-100">
+                      <td className="px-3 py-2">
+                        <button
+                          onClick={() =>
+                            setExpandedId(expanded ? null : application.id)
+                          }
+                          className="text-left flex items-start gap-1.5 group"
+                          aria-expanded={expanded}
+                        >
+                          <span
+                            className={
+                              'text-gray-400 mt-0.5 transition-transform ' +
+                              (expanded ? 'rotate-90' : '')
+                            }
+                          >
+                            ›
+                          </span>
+                          <span>
+                            <span className="block text-gray-900 group-hover:text-crewwerk">
+                              {application.applicant_name}
+                            </span>
+                            <span className="block text-xs text-gray-500">
+                              {application.applicant_email}
+                            </span>
+                          </span>
+                        </button>
+                      </td>
+                      <td className="px-3 py-2 text-gray-600">
+                        {application.job_postings?.title ??
+                          'Initiativbewerbung'}
+                      </td>
+                      <td className="px-3 py-2 text-gray-600">
+                        <select
+                          value={application.status}
+                          disabled={updatingId === application.id}
+                          onChange={(event) =>
+                            handleStatusChange(
+                              application.id,
+                              event.target.value,
+                            )
+                          }
+                          className="border border-gray-300 rounded px-2 py-1 text-sm disabled:opacity-50"
+                        >
+                          {statusOptions.map((status) => (
+                            <option key={status} value={status}>
+                              {statusLabels[status]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                        {new Date(application.created_at).toLocaleDateString(
+                          'de-DE',
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        <button
+                          onClick={() => handleDelete(application)}
+                          title="Bewerbung löschen"
+                          aria-label="Bewerbung löschen"
+                          className="text-red-600 hover:text-red-800 p-1"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482 41.03 41.03 0 0 0-2.365-.298V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                    {expanded && (
+                      <tr className="bg-gray-50/70">
+                        <td colSpan={5} className="px-6 py-4">
+                          <ApplicationDetails application={application} />
+                        </td>
+                      </tr>
                     )}
-                  </td>
-                  <td className="px-2 py-2 text-right">
-                    <button
-                      onClick={() => handleDelete(application)}
-                      title="Bewerbung löschen"
-                      aria-label="Bewerbung löschen"
-                      className="text-red-600 hover:text-red-800 p-1"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="w-4 h-4"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482 41.03 41.03 0 0 0-2.365-.298V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                  </Fragment>
+                )
+              })}
             </tbody>
           </table>
         </div>

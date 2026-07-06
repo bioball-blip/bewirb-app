@@ -2,6 +2,12 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import {
+  ApplicantCvFields,
+  cvValuesToInsert,
+  emptyCvValues,
+  type ApplicantCvValues,
+} from '../components/ApplicantCvFields'
 
 const employmentTypeLabels: Record<string, string> = {
   vollzeit: 'Vollzeit',
@@ -23,6 +29,7 @@ export function JobApplyPage() {
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [cv, setCv] = useState<ApplicantCvValues>(emptyCvValues)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -58,6 +65,7 @@ export function JobApplyPage() {
       job_posting_id: jobPostingId,
       applicant_name: name,
       applicant_email: email,
+      ...cvValuesToInsert(cv),
     })
 
     setSubmitting(false)
@@ -107,7 +115,7 @@ export function JobApplyPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow rounded-lg p-8 w-full max-w-sm flex flex-col gap-4"
+        className="bg-white shadow rounded-lg p-8 w-full max-w-md flex flex-col gap-4"
       >
         <h1 className="text-xl font-semibold text-gray-900">
           {title ? `Bewirb dich als ${title}` : 'Bewerbung'}
@@ -135,6 +143,8 @@ export function JobApplyPage() {
           onChange={(event) => setEmail(event.target.value)}
           className="border border-gray-300 rounded px-3 py-2"
         />
+
+        <ApplicantCvFields values={cv} onChange={setCv} />
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 

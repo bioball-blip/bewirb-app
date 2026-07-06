@@ -2,6 +2,12 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import {
+  ApplicantCvFields,
+  cvValuesToInsert,
+  emptyCvValues,
+  type ApplicantCvValues,
+} from '../components/ApplicantCvFields'
 
 type OpenJobPosting = {
   id: string
@@ -26,6 +32,7 @@ export function ApplyPage() {
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [cv, setCv] = useState<ApplicantCvValues>(emptyCvValues)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -61,6 +68,7 @@ export function ApplyPage() {
       tenant_id: tenantId,
       applicant_name: name,
       applicant_email: email,
+      ...cvValuesToInsert(cv),
     })
 
     setSubmitting(false)
@@ -98,7 +106,7 @@ export function ApplyPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-sm flex flex-col gap-6">
+      <div className="w-full max-w-md flex flex-col gap-6">
         {openJobs.length > 0 && (
           <div className="bg-white shadow rounded-lg p-6 flex flex-col gap-3">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -164,6 +172,8 @@ export function ApplyPage() {
             onChange={(event) => setEmail(event.target.value)}
             className="border border-gray-300 rounded px-3 py-2"
           />
+
+          <ApplicantCvFields values={cv} onChange={setCv} />
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
