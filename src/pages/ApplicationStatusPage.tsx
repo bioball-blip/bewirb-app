@@ -35,7 +35,7 @@ export function ApplicationStatusPage() {
         setLoading(false)
 
         if (error) {
-          setError(error.message)
+          setError('Der Status konnte gerade nicht geladen werden. Bitte versuche es später erneut.')
           return
         }
 

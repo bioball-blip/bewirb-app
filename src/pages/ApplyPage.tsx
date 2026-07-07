@@ -74,7 +74,7 @@ export function ApplyPage() {
     setSubmitting(false)
 
     if (error) {
-      setError(error.message)
+      setError('Deine Bewerbung konnte nicht gesendet werden. Bitte versuche es erneut.')
       return
     }
 

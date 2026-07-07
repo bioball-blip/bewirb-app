@@ -23,7 +23,7 @@ export function AccessRequestForm() {
     setSubmitting(false)
 
     if (error) {
-      setError(error.message)
+      setError('Deine Anfrage konnte nicht gesendet werden. Bitte versuche es später erneut.')
       return
     }
 

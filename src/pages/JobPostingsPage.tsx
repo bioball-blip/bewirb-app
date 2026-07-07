@@ -51,10 +51,12 @@ export function JobPostingsPage() {
           .order('created_at', { ascending: false }),
       ])
 
-      if (tenantResult.error) setError(tenantResult.error.message)
+      if (tenantResult.error)
+        setError('Die Daten konnten nicht geladen werden.')
       else setTenantId(tenantResult.data.id)
 
-      if (jobPostingsResult.error) setError(jobPostingsResult.error.message)
+      if (jobPostingsResult.error)
+        setError('Die Stellenausschreibungen konnten nicht geladen werden.')
       else setJobPostings(jobPostingsResult.data ?? [])
 
       setLoading(false)
@@ -88,7 +90,7 @@ export function JobPostingsPage() {
     setCreatingJob(false)
 
     if (error) {
-      setJobError(error.message)
+      setJobError('Die Stelle konnte nicht angelegt werden. Bitte versuche es erneut.')
       return
     }
 
@@ -118,7 +120,7 @@ export function JobPostingsPage() {
     setUpdatingJobId(null)
 
     if (error) {
-      setJobError(error.message)
+      setJobError('Der Status der Stelle konnte nicht geändert werden.')
       return
     }
 

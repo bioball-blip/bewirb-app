@@ -211,17 +211,18 @@ export function DashboardPage() {
             .order('created_at', { ascending: false }),
         ])
 
-      if (tenantResult.error) setError(tenantResult.error.message)
+      if (tenantResult.error) setError('Die Daten konnten nicht geladen werden.')
       else {
         setTenantId(tenantResult.data.id)
         setTenantName(tenantResult.data.name)
       }
 
-      if (applicationsResult.error) setError(applicationsResult.error.message)
+      if (applicationsResult.error)
+        setError('Die Bewerbungen konnten nicht geladen werden.')
       else setApplications(applicationsResult.data ?? [])
 
       if (openJobPostingsResult.error)
-        setError(openJobPostingsResult.error.message)
+        setError('Die Stellenausschreibungen konnten nicht geladen werden.')
       else setOpenJobPostings(openJobPostingsResult.data ?? [])
 
       setLoading(false)
@@ -258,7 +259,7 @@ export function DashboardPage() {
     setCreating(false)
 
     if (error) {
-      setCreateError(error.message)
+      setCreateError('Die Bewerbung konnte nicht angelegt werden. Bitte versuche es erneut.')
       return
     }
 
@@ -284,7 +285,7 @@ export function DashboardPage() {
     setUpdatingId(null)
 
     if (error) {
-      setStatusError(error.message)
+      setStatusError('Der Status konnte nicht geändert werden. Bitte versuche es erneut.')
       return
     }
 
@@ -319,7 +320,7 @@ export function DashboardPage() {
       .eq('id', application.id)
 
     if (error) {
-      setStatusError(error.message)
+      setStatusError('Die Bewerbung konnte nicht gelöscht werden. Bitte versuche es erneut.')
       return
     }
 

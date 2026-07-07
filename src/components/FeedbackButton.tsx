@@ -33,7 +33,7 @@ export function FeedbackButton({ tenantId }: { tenantId: string | null }) {
     setSubmitting(false)
 
     if (error) {
-      setError(error.message)
+      setError('Feedback konnte nicht gesendet werden. Bitte versuche es erneut.')
       return
     }
 
