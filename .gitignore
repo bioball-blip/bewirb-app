@@ -16,6 +16,10 @@ dist-ssr
 !.env.example
 supabase/.temp
 
+# Lokaler Supabase Management-Token (Personal Access Token) -
+# Klartext-Geheimnis, darf NIEMALS in Git/GitHub. Wird nur lokal gelesen.
+.supabase-token
+
 # Enthält teils sensible, lokale Tool-Berechtigungen/Kommandohistorie -
 # nicht für Versionskontrolle gedacht.
 .claude/settings.local.json
