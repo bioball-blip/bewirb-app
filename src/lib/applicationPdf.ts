@@ -4,8 +4,10 @@ type ApplicationForPdf = {
   status: string
   created_at: string
   phone: string | null
+  desired_position: string | null
   location: string | null
   available_from: string | null
+  salary_expectation: string | null
   desired_working_time: string | null
   work_experience: string | null
   education: string | null
@@ -100,13 +102,15 @@ export async function downloadApplicationPdf(
   field('Name', application.applicant_name)
   field('E-Mail', application.applicant_email)
   field('Telefon', application.phone)
-  field('Wohnort', application.location)
   field(
     'Beworben auf',
     application.job_postings?.title ?? 'Initiativbewerbung',
   )
+  field('Stelle / Position', application.desired_position)
   field('Status', statusLabels[application.status] ?? application.status)
   field('Verfügbar ab', application.available_from)
+  field('Gehaltsvorstellung', application.salary_expectation)
+  field('Wohnort', application.location)
   field(
     'Gewünschte Arbeitszeit',
     application.desired_working_time &&
@@ -115,10 +119,10 @@ export async function downloadApplicationPdf(
           application.desired_working_time)
       : null,
   )
-  field('Berufserfahrung', application.work_experience)
+  field('Sprachkenntnisse', application.languages)
+  field('Berufserfahrung / Werdegang', application.work_experience)
   field('Ausbildung & Abschlüsse', application.education)
-  field('Sprachen', application.languages)
-  field('Nachricht an den Betrieb', application.applicant_message)
+  field('Bewerbungsschreiben', application.applicant_message)
 
   const safeName = application.applicant_name
     .replace(/[^a-z0-9äöüß ]/gi, '')

@@ -50,6 +50,8 @@ export function JobApplyPage() {
         setLocation(data[0].location)
         setSalaryRange(data[0].salary_range)
         setTenantId(data[0].tenant_id)
+        // Positionsfeld mit dem Stellentitel vorbelegen (bleibt änderbar).
+        setCv((prev) => ({ ...prev, position: data[0].title }))
       })
   }, [jobPostingId])
 

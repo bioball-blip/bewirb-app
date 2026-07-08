@@ -15,8 +15,10 @@ type Application = {
   created_at: string
   updated_at: string
   phone: string | null
+  desired_position: string | null
   location: string | null
   available_from: string | null
+  salary_expectation: string | null
   desired_working_time: string | null
   work_experience: string | null
   education: string | null
@@ -115,8 +117,10 @@ function ApplicationDetails({
 
   const hasAny =
     application.phone ||
+    application.desired_position ||
     application.location ||
     application.available_from ||
+    application.salary_expectation ||
     (workingTime && application.desired_working_time !== 'egal') ||
     application.work_experience ||
     application.education ||
@@ -138,8 +142,13 @@ function ApplicationDetails({
     <div className="flex flex-col gap-4">
       <div className="grid sm:grid-cols-2 gap-4">
       <DetailItem label="Telefon" value={application.phone} />
-      <DetailItem label="Wohnort" value={application.location} />
+      <DetailItem label="Stelle / Position" value={application.desired_position} />
       <DetailItem label="Verfügbar ab" value={application.available_from} />
+      <DetailItem
+        label="Gehaltsvorstellung"
+        value={application.salary_expectation}
+      />
+      <DetailItem label="Wohnort" value={application.location} />
       <DetailItem
         label="Gewünschte Arbeitszeit"
         value={
@@ -149,8 +158,9 @@ function ApplicationDetails({
             : null
         }
       />
+      <DetailItem label="Sprachkenntnisse" value={application.languages} wide />
       <DetailItem
-        label="Berufserfahrung"
+        label="Berufserfahrung / Werdegang"
         value={application.work_experience}
         wide
       />
@@ -159,9 +169,8 @@ function ApplicationDetails({
         value={application.education}
         wide
       />
-      <DetailItem label="Sprachen" value={application.languages} wide />
       <DetailItem
-        label="Nachricht an den Betrieb"
+        label="Bewerbungsschreiben"
         value={application.applicant_message}
         wide
       />
@@ -200,7 +209,7 @@ export function DashboardPage() {
           supabase
             .from('applications')
             .select(
-              'id, applicant_name, applicant_email, status, created_at, updated_at, phone, location, available_from, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+              'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
             )
             .order('created_at', { ascending: false })
             .returns<Application[]>(),
@@ -251,7 +260,7 @@ export function DashboardPage() {
         applicant_email: newEmail,
       })
       .select(
-        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, location, available_from, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -277,7 +286,7 @@ export function DashboardPage() {
       .update({ status: newStatus })
       .eq('id', applicationId)
       .select(
-        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, location, available_from, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
