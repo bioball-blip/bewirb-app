@@ -26,6 +26,7 @@ type Application = {
   education: string | null
   languages: string | null
   applicant_message: string | null
+  unseen_status_change: boolean
   job_postings: { title: string } | null
 }
 
@@ -249,7 +250,7 @@ export function DashboardPage() {
         supabase
           .from('applications')
           .select(
-            'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+            'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, unseen_status_change, job_postings(title)',
           )
           .order('created_at', { ascending: false })
           .returns<Application[]>(),
@@ -305,7 +306,7 @@ export function DashboardPage() {
         location_id: isOwner ? null : (profile?.location_id ?? null),
       })
       .select(
-        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, unseen_status_change, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -331,7 +332,7 @@ export function DashboardPage() {
       .update({ status: newStatus })
       .eq('id', applicationId)
       .select(
-        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, unseen_status_change, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -381,6 +382,20 @@ export function DashboardPage() {
     setApplications((prev) => prev.filter((a) => a.id !== application.id))
   }
 
+  // Beim Öffnen einer Bewerbung den "ungesehen"-Hinweis zurücksetzen (Chef).
+  async function clearUnseen(application: Application) {
+    if (!isOwner || !application.unseen_status_change) return
+    await supabase
+      .from('applications')
+      .update({ unseen_status_change: false })
+      .eq('id', application.id)
+    setApplications((prev) =>
+      prev.map((a) =>
+        a.id === application.id ? { ...a, unseen_status_change: false } : a,
+      ),
+    )
+  }
+
   function renderRow(application: Application) {
     const expanded = expandedId === application.id
     return (
@@ -388,7 +403,11 @@ export function DashboardPage() {
         <tr className="border-t border-gray-100">
           <td className="px-3 py-2">
             <button
-              onClick={() => setExpandedId(expanded ? null : application.id)}
+              onClick={() => {
+                const willExpand = !expanded
+                setExpandedId(willExpand ? application.id : null)
+                if (willExpand) clearUnseen(application)
+              }}
               className="text-left flex items-start gap-1.5 group"
               aria-expanded={expanded}
             >
@@ -402,6 +421,12 @@ export function DashboardPage() {
               </span>
               <span>
                 <span className="block text-gray-900 group-hover:text-crewwerk">
+                  {isOwner && application.unseen_status_change && (
+                    <span
+                      className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1.5 align-middle"
+                      title="Status von einer Filiale geändert"
+                    />
+                  )}
                   {application.applicant_name}
                 </span>
                 <span className="block text-xs text-gray-500">
@@ -679,6 +704,12 @@ export function DashboardPage() {
                                 <span className="text-xs font-normal text-gray-500">
                                   ({g.apps.length})
                                 </span>
+                                {g.apps.some((a) => a.unseen_status_change) && (
+                                  <span
+                                    className="inline-block w-2 h-2 rounded-full bg-red-500"
+                                    title="Neue Statusänderung in dieser Filiale"
+                                  />
+                                )}
                               </span>
                             </td>
                           </tr>
