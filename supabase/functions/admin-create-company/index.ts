@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const companyName = String(body.companyName ?? "").trim();
     const ownerEmail = String(body.ownerEmail ?? "").trim();
+    const seatLimit = Math.max(1, Math.floor(Number(body.seatLimit) || 1));
     const locations: string[] = Array.isArray(body.locations)
       ? body.locations.map((l: unknown) => String(l).trim()).filter(Boolean)
       : [];
@@ -56,10 +57,10 @@ Deno.serve(async (req) => {
       return json({ error: "Firmenname und Inhaber-E-Mail sind erforderlich" }, 400);
     }
 
-    // 3) Firma anlegen.
+    // 3) Firma anlegen (mit Zugangs-Kontingent).
     const { data: tenant, error: tErr } = await admin
       .from("tenants")
-      .insert({ name: companyName })
+      .insert({ name: companyName, seat_limit: seatLimit })
       .select("id")
       .single();
     if (tErr || !tenant) return json({ error: "Firma konnte nicht angelegt werden" }, 500);

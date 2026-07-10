@@ -38,6 +38,7 @@ export function TeamPage() {
   const [locations, setLocations] = useState<Location[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [members, setMembers] = useState<Member[]>([])
+  const [seatLimit, setSeatLimit] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -84,7 +85,7 @@ export function TeamPage() {
 
   useEffect(() => {
     async function load() {
-      const [locationsResult, invitationsResult, membersResult] =
+      const [locationsResult, invitationsResult, membersResult, tenantResult] =
         await Promise.all([
           supabase.from('locations').select('id, name').order('name'),
           supabase
@@ -92,12 +93,14 @@ export function TeamPage() {
             .select('id, email, role, location_id, token, accepted_at')
             .order('created_at', { ascending: false }),
           supabase.from('users').select('id, email, role, location_id'),
+          supabase.from('tenants').select('seat_limit').single(),
         ])
 
       if (locationsResult.error) setError('Die Filialen konnten nicht geladen werden.')
       else setLocations(locationsResult.data ?? [])
       if (!invitationsResult.error) setInvitations(invitationsResult.data ?? [])
       if (!membersResult.error) setMembers(membersResult.data ?? [])
+      if (!tenantResult.error) setSeatLimit(tenantResult.data?.seat_limit ?? null)
 
       setLoading(false)
     }
@@ -180,7 +183,13 @@ export function TeamPage() {
 
     setInviting(false)
     if (error || !data) {
-      setError('Die Einladung konnte nicht erstellt werden. Bitte versuche es erneut.')
+      if (error?.message?.includes('seat_limit_reached')) {
+        setError(
+          'Das Zugangs-Kontingent dieser Firma ist ausgeschöpft. Sperre/lösche einen Zugang oder buche weitere Zugänge dazu.',
+        )
+      } else {
+        setError('Die Einladung konnte nicht erstellt werden. Bitte versuche es erneut.')
+      }
       return
     }
     setInvitations((prev) => [data, ...prev])
@@ -210,6 +219,8 @@ export function TeamPage() {
   }
 
   const pendingInvitations = invitations.filter((i) => !i.accepted_at)
+  const seatsUsed = members.length + pendingInvitations.length
+  const seatsFull = seatLimit !== null && seatsUsed >= seatLimit
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -349,9 +360,21 @@ export function TeamPage() {
             {/* --- Zugänge einladen --- */}
             <section className="bg-white rounded-lg shadow p-4 flex flex-col gap-4">
               <div className="flex flex-col gap-1">
-                <h2 className="text-sm font-semibold text-gray-900">
-                  Zugänge einladen
-                </h2>
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    Zugänge einladen
+                  </h2>
+                  {seatLimit !== null && (
+                    <span
+                      className={
+                        'text-xs font-medium ' +
+                        (seatsFull ? 'text-red-600' : 'text-gray-500')
+                      }
+                    >
+                      {seatsUsed} / {seatLimit} Zugängen belegt
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500">
                   Lade Mitarbeiter:innen ein und weise ihnen eine Filiale sowie
                   „Bearbeiten" oder „Nur ansehen" zu. Teile den erzeugten
@@ -395,7 +418,7 @@ export function TeamPage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={inviting || locations.length === 0}
+                  disabled={inviting || locations.length === 0 || seatsFull}
                   className="self-start bg-crewwerk text-crewwerk-cream rounded px-4 py-2 text-sm hover:bg-crewwerk-light disabled:opacity-50"
                 >
                   {inviting ? 'Wird erstellt…' : 'Einladung erstellen'}
@@ -403,6 +426,12 @@ export function TeamPage() {
                 {locations.length === 0 && (
                   <p className="text-xs text-gray-400">
                     Lege zuerst eine Filiale an, bevor du Zugänge einlädst.
+                  </p>
+                )}
+                {seatsFull && locations.length > 0 && (
+                  <p className="text-xs text-red-600">
+                    Kontingent ausgeschöpft. Sperre/lösche einen Zugang oder
+                    buche weitere Zugänge dazu.
                   </p>
                 )}
               </form>
