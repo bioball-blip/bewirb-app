@@ -8,6 +8,7 @@ import { ApplyPage } from './pages/ApplyPage'
 import { JobApplyPage } from './pages/JobApplyPage'
 import { JobPostingsPage } from './pages/JobPostingsPage'
 import { TeamPage } from './pages/TeamPage'
+import { AdminPage } from './pages/AdminPage'
 import { ImpressumPage } from './pages/ImpressumPage'
 import { DatenschutzPage } from './pages/DatenschutzPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -46,6 +47,14 @@ function App() {
           element={
             <ProtectedRoute>
               <TeamPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPage />
             </ProtectedRoute>
           }
         />

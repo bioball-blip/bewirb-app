@@ -13,6 +13,7 @@ type InvitationInfo = {
 }
 
 const roleLabels: Record<string, string> = {
+  owner: 'Inhaber',
   editor: 'Bearbeiten',
   viewer: 'Nur ansehen',
 }

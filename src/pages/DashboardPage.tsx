@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from '../components/Logo'
 import { FeedbackButton } from '../components/FeedbackButton'
@@ -186,7 +186,7 @@ function ApplicationDetails({
 
 export function DashboardPage() {
   useDocumentTitle('Dashboard')
-  const { profile } = useAuth()
+  const { profile, isPlatformAdmin, profileLoading } = useAuth()
 
   const [tenantId, setTenantId] = useState<string | null>(null)
   const [tenantName, setTenantName] = useState<string | null>(null)
@@ -364,6 +364,12 @@ export function DashboardPage() {
     }
 
     setApplications((prev) => prev.filter((a) => a.id !== application.id))
+  }
+
+  // Plattform-Admins (Betreiber) haben keinen eigenen Betrieb -> zur
+  // Betreiber-Verwaltung schicken statt ins (leere) Dashboard.
+  if (!profileLoading && isPlatformAdmin && !profile) {
+    return <Navigate to="/admin" replace />
   }
 
   return (
