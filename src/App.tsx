@@ -7,6 +7,7 @@ import { ApplicationStatusPage } from './pages/ApplicationStatusPage'
 import { ApplyPage } from './pages/ApplyPage'
 import { JobApplyPage } from './pages/JobApplyPage'
 import { JobPostingsPage } from './pages/JobPostingsPage'
+import { TeamPage } from './pages/TeamPage'
 import { ImpressumPage } from './pages/ImpressumPage'
 import { DatenschutzPage } from './pages/DatenschutzPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -37,6 +38,14 @@ function App() {
           element={
             <ProtectedRoute>
               <JobPostingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/team"
+          element={
+            <ProtectedRoute>
+              <TeamPage />
             </ProtectedRoute>
           }
         />

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import {
@@ -25,7 +25,10 @@ const employmentTypeLabels: Record<string, string> = {
 
 export function ApplyPage() {
   const { tenantId } = useParams()
+  const [searchParams] = useSearchParams()
+  const locationId = searchParams.get('loc')
   const [tenantName, setTenantName] = useState<string | null>(null)
+  const [locationName, setLocationName] = useState<string | null>(null)
   useDocumentTitle(tenantName ? `Bewerbung bei ${tenantName}` : 'Bewerbung')
   const [notFound, setNotFound] = useState(false)
   const [openJobs, setOpenJobs] = useState<OpenJobPosting[]>([])
@@ -55,7 +58,19 @@ export function ApplyPage() {
       .then(({ data }) => {
         setOpenJobs(data ?? [])
       })
-  }, [tenantId])
+
+    // Filialspezifischer Link (?loc=...): Filialnamen zur Anzeige laden.
+    if (locationId) {
+      supabase
+        .rpc('get_location_name', {
+          p_tenant_id: tenantId,
+          p_location_id: locationId,
+        })
+        .then(({ data }) => {
+          setLocationName(data ?? null)
+        })
+    }
+  }, [tenantId, locationId])
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -68,6 +83,8 @@ export function ApplyPage() {
       tenant_id: tenantId,
       applicant_name: name,
       applicant_email: email,
+      // Vom Link vorgeschlagene Filiale; serverseitig validiert (Trigger).
+      location_id: locationId,
       ...cvValuesToInsert(cv),
     })
 
@@ -152,6 +169,11 @@ export function ApplyPage() {
               ? `Initiativbewerbung bei ${tenantName}`
               : 'Bewerbung'}
           </h1>
+          {locationName && (
+            <p className="text-sm text-gray-600">
+              Filiale: <strong>{locationName}</strong>
+            </p>
+          )}
           <p className="text-xs text-gray-500">
             Keine passende Stelle dabei? Bewirb dich trotzdem allgemein.
           </p>

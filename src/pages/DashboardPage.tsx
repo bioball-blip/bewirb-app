@@ -6,6 +6,7 @@ import { FeedbackButton } from '../components/FeedbackButton'
 import { QrCodeButton } from '../components/QrCodeButton'
 import { downloadApplicationPdf } from '../lib/applicationPdf'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useAuth } from '../context/AuthContext'
 
 type Application = {
   id: string
@@ -17,6 +18,7 @@ type Application = {
   phone: string | null
   desired_position: string | null
   location: string | null
+  location_id: string | null
   available_from: string | null
   salary_expectation: string | null
   desired_working_time: string | null
@@ -26,6 +28,8 @@ type Application = {
   applicant_message: string | null
   job_postings: { title: string } | null
 }
+
+type LocationOption = { id: string; name: string }
 
 const workingTimeLabels: Record<string, string> = {
   vollzeit: 'Vollzeit',
@@ -182,13 +186,30 @@ function ApplicationDetails({
 
 export function DashboardPage() {
   useDocumentTitle('Dashboard')
+  const { profile } = useAuth()
 
   const [tenantId, setTenantId] = useState<string | null>(null)
   const [tenantName, setTenantName] = useState<string | null>(null)
   const [applications, setApplications] = useState<Application[]>([])
   const [openJobPostings, setOpenJobPostings] = useState<OpenJobPosting[]>([])
+  const [locations, setLocations] = useState<LocationOption[]>([])
+  const [locationFilter, setLocationFilter] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Rollen: Chef & Filialleiter dürfen bearbeiten, "Nur ansehen" nicht.
+  const canEdit = profile?.role === 'owner' || profile?.role === 'editor'
+  const isOwner = profile?.role === 'owner'
+
+  function locationName(id: string | null) {
+    if (!id) return '—'
+    return locations.find((l) => l.id === id)?.name ?? '—'
+  }
+
+  // Chef kann nach Filiale filtern; Filial-Zugänge sehen ohnehin nur die eigene.
+  const visibleApplications = locationFilter
+    ? applications.filter((a) => a.location_id === locationFilter)
+    : applications
 
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
@@ -203,22 +224,27 @@ export function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      const [tenantResult, applicationsResult, openJobPostingsResult] =
-        await Promise.all([
-          supabase.from('tenants').select('id, name').single(),
-          supabase
-            .from('applications')
-            .select(
-              'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
-            )
-            .order('created_at', { ascending: false })
-            .returns<Application[]>(),
-          supabase
-            .from('job_postings')
-            .select('id, title, employment_type, location')
-            .eq('status', 'offen')
-            .order('created_at', { ascending: false }),
-        ])
+      const [
+        tenantResult,
+        applicationsResult,
+        openJobPostingsResult,
+        locationsResult,
+      ] = await Promise.all([
+        supabase.from('tenants').select('id, name').single(),
+        supabase
+          .from('applications')
+          .select(
+            'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+          )
+          .order('created_at', { ascending: false })
+          .returns<Application[]>(),
+        supabase
+          .from('job_postings')
+          .select('id, title, employment_type, location')
+          .eq('status', 'offen')
+          .order('created_at', { ascending: false }),
+        supabase.from('locations').select('id, name').order('name'),
+      ])
 
       if (tenantResult.error) setError('Die Daten konnten nicht geladen werden.')
       else {
@@ -233,6 +259,8 @@ export function DashboardPage() {
       if (openJobPostingsResult.error)
         setError('Die Stellenausschreibungen konnten nicht geladen werden.')
       else setOpenJobPostings(openJobPostingsResult.data ?? [])
+
+      if (!locationsResult.error) setLocations(locationsResult.data ?? [])
 
       setLoading(false)
     }
@@ -258,9 +286,11 @@ export function DashboardPage() {
         tenant_id: tenantId,
         applicant_name: newName,
         applicant_email: newEmail,
+        // Filialleiter legen in ihrer eigenen Filiale an; der Chef betriebsweit.
+        location_id: isOwner ? null : (profile?.location_id ?? null),
       })
       .select(
-        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -286,7 +316,7 @@ export function DashboardPage() {
       .update({ status: newStatus })
       .eq('id', applicationId)
       .select(
-        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
+        'id, applicant_name, applicant_email, status, created_at, updated_at, phone, desired_position, location, location_id, available_from, salary_expectation, desired_working_time, work_experience, education, languages, applicant_message, job_postings(title)',
       )
       .returns<Application[]>()
       .single()
@@ -347,6 +377,14 @@ export function DashboardPage() {
           linkTo="/dashboard"
         />
         <div className="flex items-center gap-4">
+          {profile?.role === 'owner' && (
+            <Link
+              to="/dashboard/team"
+              className="text-sm text-crewwerk-cream underline"
+            >
+              Filialen & Team
+            </Link>
+          )}
           <FeedbackButton tenantId={tenantId} />
           <button
             onClick={handleLogout}
@@ -419,6 +457,7 @@ export function DashboardPage() {
           ))}
         </div>
 
+        {canEdit && (
         <form
           onSubmit={handleCreate}
           className="bg-white rounded-lg shadow p-4 flex flex-col sm:flex-row gap-3 sm:items-end"
@@ -454,8 +493,27 @@ export function DashboardPage() {
             {creating ? 'Wird angelegt…' : 'Bewerbung anlegen'}
           </button>
         </form>
+        )}
         {createError && <p className="text-red-600 text-sm">{createError}</p>}
         {statusError && <p className="text-red-600 text-sm">{statusError}</p>}
+
+        {isOwner && locations.length > 0 && (
+          <div className="flex items-center gap-2 text-sm">
+            <label className="text-gray-500">Filiale:</label>
+            <select
+              value={locationFilter}
+              onChange={(event) => setLocationFilter(event.target.value)}
+              className="border border-gray-300 rounded px-2 py-1 text-sm"
+            >
+              <option value="">Alle</option>
+              {locations.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full text-left text-sm">
@@ -463,6 +521,7 @@ export function DashboardPage() {
               <tr>
                 <th className="px-3 py-2 font-medium">Bewerber:in</th>
                 <th className="px-3 py-2 font-medium">Stelle</th>
+                <th className="px-3 py-2 font-medium">Filiale</th>
                 <th className="px-3 py-2 font-medium">Status</th>
                 <th className="px-3 py-2 font-medium">Datum</th>
                 <th className="px-2 py-2 font-medium"></th>
@@ -472,24 +531,24 @@ export function DashboardPage() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-4 text-gray-400 text-center"
                   >
                     Lädt…
                   </td>
                 </tr>
               )}
-              {!loading && applications.length === 0 && (
+              {!loading && visibleApplications.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-4 text-gray-400 text-center"
                   >
                     Noch keine Bewerbungen.
                   </td>
                 </tr>
               )}
-              {applications.map((application) => {
+              {visibleApplications.map((application) => {
                 const expanded = expandedId === application.id
                 return (
                   <Fragment key={application.id}>
@@ -525,26 +584,41 @@ export function DashboardPage() {
                           'Initiativbewerbung'}
                       </td>
                       <td className="px-3 py-2 text-gray-600">
-                        <select
-                          value={application.status}
-                          disabled={updatingId === application.id}
-                          onChange={(event) =>
-                            handleStatusChange(
-                              application.id,
-                              event.target.value,
-                            )
-                          }
-                          className={
-                            'rounded-full border-0 px-2.5 py-1 text-sm font-medium cursor-pointer disabled:opacity-50 ' +
-                            (statusStyles[application.status] ?? '')
-                          }
-                        >
-                          {statusOptions.map((status) => (
-                            <option key={status} value={status}>
-                              {statusLabels[status]}
-                            </option>
-                          ))}
-                        </select>
+                        {locationName(application.location_id)}
+                      </td>
+                      <td className="px-3 py-2 text-gray-600">
+                        {canEdit ? (
+                          <select
+                            value={application.status}
+                            disabled={updatingId === application.id}
+                            onChange={(event) =>
+                              handleStatusChange(
+                                application.id,
+                                event.target.value,
+                              )
+                            }
+                            className={
+                              'rounded-full border-0 px-2.5 py-1 text-sm font-medium cursor-pointer disabled:opacity-50 ' +
+                              (statusStyles[application.status] ?? '')
+                            }
+                          >
+                            {statusOptions.map((status) => (
+                              <option key={status} value={status}>
+                                {statusLabels[status]}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span
+                            className={
+                              'inline-block rounded-full px-2.5 py-1 text-sm font-medium ' +
+                              (statusStyles[application.status] ?? '')
+                            }
+                          >
+                            {statusLabels[application.status] ??
+                              application.status}
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
                         {new Date(application.created_at).toLocaleDateString(
@@ -552,6 +626,7 @@ export function DashboardPage() {
                         )}
                       </td>
                       <td className="px-2 py-2 text-right">
+                        {canEdit && (
                         <button
                           onClick={() => handleDelete(application)}
                           title="Bewerbung löschen"
@@ -571,6 +646,7 @@ export function DashboardPage() {
                             />
                           </svg>
                         </button>
+                        )}
                       </td>
                     </tr>
                     {expanded && (

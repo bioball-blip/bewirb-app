@@ -13,7 +13,10 @@ type JobPosting = {
   employment_type: string | null
   location: string | null
   salary_range: string | null
+  location_id: string | null
 }
+
+type Location = { id: string; name: string }
 
 const employmentTypeLabels: Record<string, string> = {
   vollzeit: 'Vollzeit',
@@ -27,6 +30,7 @@ export function JobPostingsPage() {
 
   const [tenantId, setTenantId] = useState<string | null>(null)
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([])
+  const [locations, setLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -35,21 +39,29 @@ export function JobPostingsPage() {
   const [newJobEmploymentType, setNewJobEmploymentType] = useState('')
   const [newJobLocation, setNewJobLocation] = useState('')
   const [newJobSalaryRange, setNewJobSalaryRange] = useState('')
+  const [newJobLocationId, setNewJobLocationId] = useState('')
+
+  function locationName(id: string | null) {
+    if (!id) return null
+    return locations.find((l) => l.id === id)?.name ?? null
+  }
   const [creatingJob, setCreatingJob] = useState(false)
   const [jobError, setJobError] = useState<string | null>(null)
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
-      const [tenantResult, jobPostingsResult] = await Promise.all([
-        supabase.from('tenants').select('id').single(),
-        supabase
-          .from('job_postings')
-          .select(
-            'id, title, status, description, employment_type, location, salary_range',
-          )
-          .order('created_at', { ascending: false }),
-      ])
+      const [tenantResult, jobPostingsResult, locationsResult] =
+        await Promise.all([
+          supabase.from('tenants').select('id').single(),
+          supabase
+            .from('job_postings')
+            .select(
+              'id, title, status, description, employment_type, location, salary_range, location_id',
+            )
+            .order('created_at', { ascending: false }),
+          supabase.from('locations').select('id, name').order('name'),
+        ])
 
       if (tenantResult.error)
         setError('Die Daten konnten nicht geladen werden.')
@@ -58,6 +70,8 @@ export function JobPostingsPage() {
       if (jobPostingsResult.error)
         setError('Die Stellenausschreibungen konnten nicht geladen werden.')
       else setJobPostings(jobPostingsResult.data ?? [])
+
+      if (!locationsResult.error) setLocations(locationsResult.data ?? [])
 
       setLoading(false)
     }
@@ -81,9 +95,10 @@ export function JobPostingsPage() {
         employment_type: newJobEmploymentType || null,
         location: newJobLocation || null,
         salary_range: newJobSalaryRange || null,
+        location_id: newJobLocationId || null,
       })
       .select(
-        'id, title, status, description, employment_type, location, salary_range',
+        'id, title, status, description, employment_type, location, salary_range, location_id',
       )
       .single()
 
@@ -100,6 +115,7 @@ export function JobPostingsPage() {
     setNewJobEmploymentType('')
     setNewJobLocation('')
     setNewJobSalaryRange('')
+    setNewJobLocationId('')
   }
 
   async function handleToggleJobStatus(jobId: string, currentStatus: string) {
@@ -113,7 +129,7 @@ export function JobPostingsPage() {
       .update({ status: nextStatus })
       .eq('id', jobId)
       .select(
-        'id, title, status, description, employment_type, location, salary_range',
+        'id, title, status, description, employment_type, location, salary_range, location_id',
       )
       .single()
 
@@ -172,6 +188,28 @@ export function JobPostingsPage() {
               className="border border-gray-300 rounded px-3 py-2 text-sm"
             />
           </div>
+
+          {locations.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500">Filiale</label>
+              <select
+                value={newJobLocationId}
+                onChange={(event) => setNewJobLocationId(event.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 text-sm"
+              >
+                <option value="">Ganzer Betrieb (keine Filiale)</option>
+                {locations.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs text-gray-400">
+                Bewerbungen auf diese Stelle landen automatisch bei der
+                gewählten Filiale.
+              </span>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex flex-col gap-1 flex-1">
@@ -254,6 +292,7 @@ export function JobPostingsPage() {
               </div>
               <span className="text-xs text-gray-500">
                 {[
+                  locationName(job.location_id),
                   job.employment_type
                     ? employmentTypeLabels[job.employment_type]
                     : null,
