@@ -20,6 +20,7 @@ type Member = {
   email: string
   role: 'owner' | 'editor' | 'viewer'
   location_id: string | null
+  suspended: boolean
 }
 
 const roleLabels: Record<string, string> = {
@@ -33,7 +34,8 @@ const inputClass =
 
 export function TeamPage() {
   useDocumentTitle('Filialen & Team')
-  const { profile } = useAuth()
+  const { profile, session } = useAuth()
+  const currentUserId = session?.user?.id
 
   const [locations, setLocations] = useState<Location[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
@@ -92,7 +94,7 @@ export function TeamPage() {
             .from('invitations')
             .select('id, email, role, location_id, token, accepted_at')
             .order('created_at', { ascending: false }),
-          supabase.from('users').select('id, email, role, location_id'),
+          supabase.from('users').select('id, email, role, location_id, suspended'),
           supabase.from('tenants').select('seat_limit').single(),
         ])
 
@@ -208,6 +210,42 @@ export function TeamPage() {
     setInvitations((prev) => prev.filter((i) => i.id !== id))
   }
 
+  async function handleManageUser(
+    member: Member,
+    action: 'suspend' | 'unsuspend' | 'delete',
+  ) {
+    if (action === 'delete') {
+      const ok = window.confirm(
+        `Zugang von ${member.email} endgültig löschen? Das kann nicht rückgängig gemacht werden.`,
+      )
+      if (!ok) return
+    }
+
+    setError(null)
+    const { data, error } = await supabase.functions.invoke('owner-manage-user', {
+      body: { action, user_id: member.id },
+    })
+
+    if (error || !data?.ok) {
+      if (error?.message?.includes('seat_limit_reached') || data?.error === 'seat_limit_reached') {
+        setError('Entsperren nicht möglich: Das Kontingent ist ausgeschöpft.')
+      } else {
+        setError('Die Aktion konnte nicht ausgeführt werden. Bitte erneut versuchen.')
+      }
+      return
+    }
+
+    if (action === 'delete') {
+      setMembers((prev) => prev.filter((m) => m.id !== member.id))
+    } else {
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === member.id ? { ...m, suspended: action === 'suspend' } : m,
+        ),
+      )
+    }
+  }
+
   async function copyLink(invitation: Invitation) {
     try {
       await navigator.clipboard.writeText(joinLink(invitation.token))
@@ -219,7 +257,8 @@ export function TeamPage() {
   }
 
   const pendingInvitations = invitations.filter((i) => !i.accepted_at)
-  const seatsUsed = members.length + pendingInvitations.length
+  const seatsUsed =
+    members.filter((m) => !m.suspended).length + pendingInvitations.length
   const seatsFull = seatLimit !== null && seatsUsed >= seatLimit
 
   return (
@@ -487,16 +526,47 @@ export function TeamPage() {
               ) : (
                 <ul className="flex flex-col divide-y divide-gray-100">
                   {members.map((m) => (
-                    <li
-                      key={m.id}
-                      className="flex items-center justify-between gap-2 py-2"
-                    >
-                      <span className="text-sm text-gray-800">{m.email}</span>
-                      <span className="text-xs text-gray-500">
-                        {m.role === 'owner'
-                          ? roleLabels.owner
-                          : `${locationName(m.location_id)} · ${roleLabels[m.role]}`}
-                      </span>
+                    <li key={m.id} className="flex flex-col gap-1 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-gray-800">
+                          {m.email}
+                          {m.suspended && (
+                            <span className="ml-2 text-xs font-medium text-red-600">
+                              (gesperrt)
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {m.role === 'owner'
+                            ? roleLabels.owner
+                            : `${locationName(m.location_id)} · ${roleLabels[m.role]}`}
+                        </span>
+                      </div>
+                      {m.id !== currentUserId && m.role !== 'owner' && (
+                        <div className="flex gap-3">
+                          {m.suspended ? (
+                            <button
+                              onClick={() => handleManageUser(m, 'unsuspend')}
+                              className="text-xs font-medium text-crewwerk hover:underline"
+                            >
+                              Entsperren
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleManageUser(m, 'suspend')}
+                              className="text-xs font-medium text-crewwerk hover:underline"
+                            >
+                              Sperren
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleManageUser(m, 'delete')}
+                            className="text-xs text-red-600 hover:underline"
+                          >
+                            Löschen
+                          </button>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>

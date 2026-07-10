@@ -193,7 +193,7 @@ export function DashboardPage() {
   const [applications, setApplications] = useState<Application[]>([])
   const [openJobPostings, setOpenJobPostings] = useState<OpenJobPosting[]>([])
   const [locations, setLocations] = useState<LocationOption[]>([])
-  const [locationFilter, setLocationFilter] = useState<string>('')
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -206,10 +206,25 @@ export function DashboardPage() {
     return locations.find((l) => l.id === id)?.name ?? '—'
   }
 
-  // Chef kann nach Filiale filtern; Filial-Zugänge sehen ohnehin nur die eigene.
-  const visibleApplications = locationFilter
-    ? applications.filter((a) => a.location_id === locationFilter)
-    : applications
+  // Chef: Bewerbungen nach Filiale gruppiert (aufklappbar). Filial-Zugänge
+  // sehen ohnehin nur die eigene Filiale und bekommen die flache Liste.
+  function toggleGroup(key: string) {
+    setExpandedGroups((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    )
+  }
+
+  const groups = [
+    ...locations.map((l) => ({
+      id: l.id,
+      name: l.name,
+      apps: applications.filter((a) => a.location_id === l.id),
+    })),
+  ]
+  const unassigned = applications.filter((a) => !a.location_id)
+  if (unassigned.length > 0) {
+    groups.push({ id: 'none', name: 'Ohne Filiale', apps: unassigned })
+  }
 
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
@@ -366,6 +381,109 @@ export function DashboardPage() {
     setApplications((prev) => prev.filter((a) => a.id !== application.id))
   }
 
+  function renderRow(application: Application) {
+    const expanded = expandedId === application.id
+    return (
+      <Fragment key={application.id}>
+        <tr className="border-t border-gray-100">
+          <td className="px-3 py-2">
+            <button
+              onClick={() => setExpandedId(expanded ? null : application.id)}
+              className="text-left flex items-start gap-1.5 group"
+              aria-expanded={expanded}
+            >
+              <span
+                className={
+                  'text-gray-400 mt-0.5 transition-transform ' +
+                  (expanded ? 'rotate-90' : '')
+                }
+              >
+                ›
+              </span>
+              <span>
+                <span className="block text-gray-900 group-hover:text-crewwerk">
+                  {application.applicant_name}
+                </span>
+                <span className="block text-xs text-gray-500">
+                  {application.applicant_email}
+                </span>
+              </span>
+            </button>
+          </td>
+          <td className="px-3 py-2 text-gray-600">
+            {application.job_postings?.title ?? 'Initiativbewerbung'}
+          </td>
+          <td className="px-3 py-2 text-gray-600">
+            {locationName(application.location_id)}
+          </td>
+          <td className="px-3 py-2 text-gray-600">
+            {canEdit ? (
+              <select
+                value={application.status}
+                disabled={updatingId === application.id}
+                onChange={(event) =>
+                  handleStatusChange(application.id, event.target.value)
+                }
+                className={
+                  'rounded-full border-0 px-2.5 py-1 text-sm font-medium cursor-pointer disabled:opacity-50 ' +
+                  (statusStyles[application.status] ?? '')
+                }
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {statusLabels[status]}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span
+                className={
+                  'inline-block rounded-full px-2.5 py-1 text-sm font-medium ' +
+                  (statusStyles[application.status] ?? '')
+                }
+              >
+                {statusLabels[application.status] ?? application.status}
+              </span>
+            )}
+          </td>
+          <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+            {new Date(application.created_at).toLocaleDateString('de-DE')}
+          </td>
+          <td className="px-2 py-2 text-right">
+            {canEdit && (
+              <button
+                onClick={() => handleDelete(application)}
+                title="Bewerbung löschen"
+                aria-label="Bewerbung löschen"
+                className="text-red-600 hover:text-red-800 p-1"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482 41.03 41.03 0 0 0-2.365-.298V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            )}
+          </td>
+        </tr>
+        {expanded && (
+          <tr className="bg-gray-50/70">
+            <td colSpan={5} className="px-6 py-4">
+              <ApplicationDetails application={application} tenantName={tenantName} />
+            </td>
+          </tr>
+        )}
+      </Fragment>
+    )
+  }
+
   // Plattform-Admins (Betreiber) haben keinen eigenen Betrieb -> zur
   // Betreiber-Verwaltung schicken statt ins (leere) Dashboard.
   if (!profileLoading && isPlatformAdmin && !profile) {
@@ -503,24 +621,6 @@ export function DashboardPage() {
         {createError && <p className="text-red-600 text-sm">{createError}</p>}
         {statusError && <p className="text-red-600 text-sm">{statusError}</p>}
 
-        {isOwner && locations.length > 0 && (
-          <div className="flex items-center gap-2 text-sm">
-            <label className="text-gray-500">Filiale:</label>
-            <select
-              value={locationFilter}
-              onChange={(event) => setLocationFilter(event.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
-            >
-              <option value="">Alle</option>
-              {locations.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-100 text-gray-600">
@@ -544,7 +644,7 @@ export function DashboardPage() {
                   </td>
                 </tr>
               )}
-              {!loading && visibleApplications.length === 0 && (
+              {!loading && applications.length === 0 && (
                 <tr>
                   <td
                     colSpan={6}
@@ -554,120 +654,49 @@ export function DashboardPage() {
                   </td>
                 </tr>
               )}
-              {visibleApplications.map((application) => {
-                const expanded = expandedId === application.id
-                return (
-                  <Fragment key={application.id}>
-                    <tr className="border-t border-gray-100">
-                      <td className="px-3 py-2">
-                        <button
-                          onClick={() =>
-                            setExpandedId(expanded ? null : application.id)
-                          }
-                          className="text-left flex items-start gap-1.5 group"
-                          aria-expanded={expanded}
-                        >
-                          <span
-                            className={
-                              'text-gray-400 mt-0.5 transition-transform ' +
-                              (expanded ? 'rotate-90' : '')
-                            }
+              {!loading &&
+                applications.length > 0 &&
+                (isOwner && locations.length > 0
+                  ? groups.map((g) => {
+                      const open = expandedGroups.includes(g.id)
+                      return (
+                        <Fragment key={'grp-' + g.id}>
+                          <tr
+                            className="bg-gray-50 border-t border-gray-200 cursor-pointer hover:bg-gray-100"
+                            onClick={() => toggleGroup(g.id)}
                           >
-                            ›
-                          </span>
-                          <span>
-                            <span className="block text-gray-900 group-hover:text-crewwerk">
-                              {application.applicant_name}
-                            </span>
-                            <span className="block text-xs text-gray-500">
-                              {application.applicant_email}
-                            </span>
-                          </span>
-                        </button>
-                      </td>
-                      <td className="px-3 py-2 text-gray-600">
-                        {application.job_postings?.title ??
-                          'Initiativbewerbung'}
-                      </td>
-                      <td className="px-3 py-2 text-gray-600">
-                        {locationName(application.location_id)}
-                      </td>
-                      <td className="px-3 py-2 text-gray-600">
-                        {canEdit ? (
-                          <select
-                            value={application.status}
-                            disabled={updatingId === application.id}
-                            onChange={(event) =>
-                              handleStatusChange(
-                                application.id,
-                                event.target.value,
-                              )
-                            }
-                            className={
-                              'rounded-full border-0 px-2.5 py-1 text-sm font-medium cursor-pointer disabled:opacity-50 ' +
-                              (statusStyles[application.status] ?? '')
-                            }
-                          >
-                            {statusOptions.map((status) => (
-                              <option key={status} value={status}>
-                                {statusLabels[status]}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span
-                            className={
-                              'inline-block rounded-full px-2.5 py-1 text-sm font-medium ' +
-                              (statusStyles[application.status] ?? '')
-                            }
-                          >
-                            {statusLabels[application.status] ??
-                              application.status}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {new Date(application.created_at).toLocaleDateString(
-                          'de-DE',
-                        )}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        {canEdit && (
-                        <button
-                          onClick={() => handleDelete(application)}
-                          title="Bewerbung löschen"
-                          aria-label="Bewerbung löschen"
-                          className="text-red-600 hover:text-red-800 p-1"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="w-4 h-4"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482 41.03 41.03 0 0 0-2.365-.298V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                        )}
-                      </td>
-                    </tr>
-                    {expanded && (
-                      <tr className="bg-gray-50/70">
-                        <td colSpan={5} className="px-6 py-4">
-                          <ApplicationDetails
-                            application={application}
-                            tenantName={tenantName}
-                          />
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                )
-              })}
+                            <td colSpan={6} className="px-3 py-2">
+                              <span className="flex items-center gap-2 font-medium text-gray-800">
+                                <span
+                                  className={
+                                    'text-gray-400 transition-transform ' +
+                                    (open ? 'rotate-90' : '')
+                                  }
+                                >
+                                  ›
+                                </span>
+                                {g.name}
+                                <span className="text-xs font-normal text-gray-500">
+                                  ({g.apps.length})
+                                </span>
+                              </span>
+                            </td>
+                          </tr>
+                          {open && g.apps.map(renderRow)}
+                          {open && g.apps.length === 0 && (
+                            <tr>
+                              <td
+                                colSpan={6}
+                                className="px-8 py-2 text-xs text-gray-400"
+                              >
+                                Keine Bewerbungen in dieser Filiale.
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      )
+                    })
+                  : applications.map(renderRow))}
             </tbody>
           </table>
         </div>
