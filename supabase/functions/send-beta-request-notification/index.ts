@@ -18,7 +18,7 @@ type WebhookPayload = {
   record: BetaRequestRow;
 };
 
-const NOTIFY_EMAILS = ["marcluenser@gmx.de", "marc.luenser@gmx.de"];
+const NOTIFY_EMAILS = ["marc.luenser@gmx.de"];
 
 export default {
   fetch: withSupabase({ auth: ["secret"] }, async (req) => {
