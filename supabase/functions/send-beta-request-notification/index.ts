@@ -18,7 +18,7 @@ type WebhookPayload = {
   record: BetaRequestRow;
 };
 
-const NOTIFY_EMAIL = "marcluenser@gmx.de";
+const NOTIFY_EMAILS = ["marcluenser@gmx.de", "marc.luenser@gmx.de"];
 
 export default {
   fetch: withSupabase({ auth: ["secret"] }, async (req) => {
@@ -40,7 +40,7 @@ export default {
       },
       body: JSON.stringify({
         from: "Crewwerk <noreply@crewwerk.de>",
-        to: [NOTIFY_EMAIL],
+        to: NOTIFY_EMAILS,
         subject: `Neue Zugangsanfrage: ${record.name}`,
         html: `
           <p>Neue Zugangsanfrage über die Crewwerk-Landingpage:</p>
