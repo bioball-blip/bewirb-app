@@ -202,7 +202,9 @@ export function DemoPreview() {
                 <thead className="bg-gray-50 text-gray-500">
                   <tr>
                     <th className="px-3 py-2 font-medium">Bewerber:in</th>
-                    <th className="px-3 py-2 font-medium">Stelle</th>
+                    <th className="px-3 py-2 font-medium hidden sm:table-cell">
+                      Stelle
+                    </th>
                     <th className="px-3 py-2 font-medium">Status</th>
                   </tr>
                 </thead>
@@ -226,7 +228,7 @@ export function DemoPreview() {
                           {application.email}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-gray-600">
+                      <td className="px-3 py-2.5 text-gray-600 hidden sm:table-cell">
                         {application.role}
                       </td>
                       <td className="px-3 py-2.5">
